@@ -14,6 +14,7 @@ import org.apache.metamodel.query.Query;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 import org.bsbmloader.helpClass.JSonObjectHelperClass;
+import org.bsbmloader.helpClass.ProductHelper;
 import org.bsbmloader.helpClass.SimpleJSonHelpClass;
 
 public class MySQL {
@@ -26,10 +27,10 @@ public class MySQL {
 	private ArrayList<SimpleJSonHelpClass> data;
 	private String[] tags;
 
-	public ArrayList<SimpleJSonHelpClass> getAllPersons(){
+	public ArrayList<String[]> getAllPersons(){
 		String[] tags = {"nr", "name","mbox_sha1sum","country","publisher","publishDate"};
 		String[] value = new String[6];
-		data = new ArrayList<SimpleJSonHelpClass>();
+		ArrayList<String[]> data = new ArrayList<String[]>();
 		buildConnection();
 		try{	
 			Query query = createSimpleQuery("person");
@@ -37,7 +38,7 @@ public class MySQL {
 			while(ds.next()){
 				value  = new String[tags.length];
 				readDataFromRow(ds.getRow(), value);
-				data.add(new SimpleJSonHelpClass(tags, value));
+				data.add(value);
 			}
 			ds.close();
 		}catch(Exception e){
@@ -65,11 +66,12 @@ public class MySQL {
 		return data;	
 	}**/
 	
-	public ArrayList<JSonObjectHelperClass> getAllProduct(){
-		String[] tags = {"nr", "label","comment","producter","propertyNum1","propertyNum2","propertyNum3","propertyNum4","propertyNum5",
+	public ArrayList<ProductHelper> getAllProduct(){
+		/**String[] tags = {"nr", "label","comment","producter","propertyNum1","propertyNum2","propertyNum3","propertyNum4","propertyNum5",
 				        "propertyNum6","propertyTex1","propertyTex2","propertyTex3","propertyTex4","propertyTex5","propertyTex6",
-				        "publisher","publishDate"};
-	    ArrayList<JSonObjectHelperClass>	data = new ArrayList<JSonObjectHelperClass>();
+				        "publisher","publishDate"};**/
+		
+	    ArrayList<ProductHelper>	data = new ArrayList<ProductHelper>();
 		buildConnection();
 		try{	
 			Query query = createSimpleQuery("product");
@@ -77,10 +79,10 @@ public class MySQL {
 			while(ds.next()){
 			    String[] value  = new String[tags.length];
 				readDataFromRow(ds.getRow(), value);
-				SimpleJSonHelpClass tmp = getProducer(ds.getRow().getValue(0).toString()).get(0);
-				JSonObjectHelperClass jsObject = new JSonObjectHelperClass(tags, value, tmp);
-				jsObject.setObjectTag("producer");
-				data.add(jsObject);
+				ProductHelper product = new ProductHelper();
+				product.setValue(value);
+      			product.setProducer( getProducer(ds.getRow().getValue(0).toString()).get(0));
+				data.add(product);
 			}
 			ds.close();
 		}catch(Exception e){
@@ -95,17 +97,17 @@ public class MySQL {
 		this.password = password;
 	}
 	
-	private ArrayList<SimpleJSonHelpClass> getProducer(String productNumber){
-		String[] tags = {"nr", "label","comment","homepage","country","publisher","publishDate"};
+	private ArrayList<String[]> getProducer(String productNumber){
+//		String[] tags = {"nr", "label","comment","homepage","country","publisher","publishDate"};
 		String[] value = new String[7];
-		data = new ArrayList<SimpleJSonHelpClass>();
+		ArrayList<String[]> data = new ArrayList<String[]>();
 		buildConnection();
 		try{	
 			Query query = createSimpleQuery("producer",1);
 			DataSet ds = dc.executeQuery(query);
 			while(ds.next()){
 				readDataFromRow(ds.getRow(), value);
-				data.add(new SimpleJSonHelpClass(tags, value));
+				data.add(value);
 			}
 			ds.close();
 		}catch(Exception e){

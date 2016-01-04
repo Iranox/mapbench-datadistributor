@@ -66,8 +66,8 @@ public class Main
         Mongodb mongo = new Mongodb();
     	mongo.setConnection(hostname, Integer.parseInt(port));
     	System.out.println("Start Parse to Mongodb");
-    	mongo.insertDocument("person", mysql.getAllPersons());
-    	mongo.insertDocumentWithObject("project", mysql.getAllProduct());
+//    	mongo.insertDocument("person", mysql.getAllPersons());
+//    	mongo.insertDocumentWithObject("project", mysql.getAllProduct());
     	System.out.println("Done");
     }
     
