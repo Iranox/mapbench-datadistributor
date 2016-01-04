@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import org.bsbmloader.loader.Database;
 import org.bsbmloader.loader.Mongodb;
+import org.bsbmloader.metamodell.MongoDBLoader;
 import org.bsbmloader.metamodell.MySQL;
 
 
@@ -63,9 +64,10 @@ public class Main
         mysql = setMySql();
     	String hostname =  t.readInput("Please insert MongoDB Hostname: ");
         String port = t.readInput("Please insert MongoDB Portnumber: ");
-        Mongodb mongo = new Mongodb();
-    	mongo.setConnection(hostname, Integer.parseInt(port));
+        MongoDBLoader mongo = new MongoDBLoader();
+    	mongo.setConnectionProperties(hostname,port);
     	System.out.println("Start Parse to Mongodb");
+    	mongo.insertPersons(mysql.getAllPersons());
 //    	mongo.insertDocument("person", mysql.getAllPersons());
 //    	mongo.insertDocumentWithObject("project", mysql.getAllProduct());
     	System.out.println("Done");

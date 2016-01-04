@@ -21,9 +21,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 
 /**
- * Untest
  * @author Tobias
- * TODO Test
  */
 public class MongoDBLoader {
 	private DB db;
@@ -34,6 +32,13 @@ public class MongoDBLoader {
 	private MongoDbDataContext dc;
 	MongoClient mongoClient;
 	
+	/**
+	 * Throw error if collection person exist.
+	 * All numbers are saved as String
+	 * TODO Delete collection person before run function
+	 * TODO Parse String to int
+	 * TODO Refactor 
+	 **/
 	public void insertPersons(ArrayList<String[]> value){
 		final Schema defaultSchema = setSchema();
 		dc.executeUpdate(new UpdateScript() {
@@ -46,7 +51,7 @@ public class MongoDBLoader {
 				for(int index = 0; index < data.size();index++){
 					String[] tmp = data.get(index);
 					callback.insertInto(table).value("_id", tmp[0]).value("name", tmp[1]).value("mbox_sha1sum", tmp[2]).value("country", tmp[3])
-					                          .value("publisher", tmp[4]).value("publisDate", tmp[5]).execute();
+					                          .value("publisher", tmp[4]).value("publishDate", tmp[5]).execute();
 				}	
 			}
 			
@@ -60,7 +65,11 @@ public class MongoDBLoader {
 	}
 	
 	
-	
+	/**
+	 * Untest
+	 * 
+	 * @param data
+	 */
 	public void insertProduct(ArrayList<ProductHelper> data){
 		final Schema defaultSchema = setSchema();
 		dc.executeUpdate(new UpdateScript() {
