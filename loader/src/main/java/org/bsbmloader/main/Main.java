@@ -2,9 +2,10 @@ package org.bsbmloader.main;
 
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
+import org.bsbmloader.helpClass.ProductHelper;
 import org.bsbmloader.loader.Database;
-import org.bsbmloader.loader.Mongodb;
 import org.bsbmloader.metamodell.MongoDBLoader;
 import org.bsbmloader.metamodell.MySQL;
 
@@ -67,9 +68,11 @@ public class Main
         MongoDBLoader mongo = new MongoDBLoader();
     	mongo.setConnectionProperties(hostname,port);
     	System.out.println("Start Parse to Mongodb");
+    	mongo.insertVendor(mysql.getAllVendor());
+//    	mongo.insertProductFeature(mysql.getAllProductFeature());
+//    	mongo.insertProductType(mysql.getAllProductType());
     	mongo.insertPersons(mysql.getAllPersons());
-//    	mongo.insertDocument("person", mysql.getAllPersons());
-//    	mongo.insertDocumentWithObject("project", mysql.getAllProduct());
+//    	ArrayList<ProductHelper> test = mysql.getAllProduct();
     	System.out.println("Done");
     }
     

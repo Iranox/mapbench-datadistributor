@@ -4,18 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.math3.stat.descriptive.summary.Product;
+
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.create.TableCreationBuilder;
-import org.apache.metamodel.data.RowBuilder;
-import org.apache.metamodel.insert.InsertInto;
-import org.apache.metamodel.insert.RowInsertable;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.mongodb.MongoDbDataContext;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 import org.bsbmloader.helpClass.ProductHelper;
+import org.bsbmloader.helpClass.ReviewHelper;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
@@ -23,7 +21,7 @@ import com.mongodb.MongoClient;
 /**
  * @author Tobias
  */
-public class MongoDBLoader {
+public class MongoDBLoader{
 	private DB db;
 	private String hostname;
 	private int port;
@@ -32,38 +30,45 @@ public class MongoDBLoader {
 	private MongoDbDataContext dc;
 	MongoClient mongoClient;
 	
-	/**
-	 * Throw error if collection person exist.
-	 * All numbers are saved as String
-	 * TODO Delete collection person before run function
-	 * TODO Parse String to int
-	 * TODO Refactor 
-	 **/
-	public void insertPersons(ArrayList<String[]> value){
-		final Schema defaultSchema = setSchema();
-		dc.executeUpdate(new UpdateScript() {
-			private ArrayList<String[]> data;
-			private Schema defaultSchema;
-			
-			public void run(UpdateCallback callback) {
-				Table table = callback.createTable(defaultSchema,"person").withColumn("_id").withColumn("name").withColumn("mbox_sha1sum").withColumn("country")
-						      .withColumn("publisher").withColumn("publishDate").execute();
-				for(int index = 0; index < data.size();index++){
-					String[] tmp = data.get(index);
-					callback.insertInto(table).value("_id", tmp[0]).value("name", tmp[1]).value("mbox_sha1sum", tmp[2]).value("country", tmp[3])
-					                          .value("publisher", tmp[4]).value("publishDate", tmp[5]).execute();
-				}	
-			}
-			
-			private UpdateScript init(ArrayList<String[]> value, Schema defaultSchema){
-				this.data = value;
-				this.defaultSchema = defaultSchema;
-				return this;
-			}
-			
-		}.init(value,defaultSchema));
+
+	public void insertProductType(ArrayList<String[]> value){
+		String[] tags = {"_id","label","comment","parent","publisher","publishDate"};
+		runUpdate(value,tags,"producttype_details");
 	}
 	
+	public void insertProductFeature(ArrayList<String[]> value){
+		String[] tags = {"_id","label","comment","publisher","publishDate"};
+		runUpdate(value,tags,"productfeature_details");
+	}
+
+	public void insertVendor(ArrayList<String[]> value){
+		String[] tags = {"_id","label","comment","homepage","country","publisher","publishDate"};
+		runUpdate(value,tags,"vendor");
+	}
+	
+	public void insertPersons(ArrayList<String[]> value){
+		String[] tags = {"_id","name","mbox_sha1sum","country","publisher","publishDate"};
+		runUpdate(value,tags,"person");
+	}
+	
+	public void insertReview(ReviewHelper data){
+		final Schema defaultSchema = setSchema();
+		String[] tmp1 = new String[data.getValue().get(0).length];
+		ArrayList<String[]> value = new ArrayList<String[]>();
+		for(int i = 0; i < data.getValue().size(); i++){
+			for(int j = 0 ; j < data.getValue().size();j++){
+				
+				if(j == 2)
+					tmp1[j] = data.getProductTitle(Integer.toString(j));
+				else
+					tmp1 [j]= data.getValue().get(i)[j];
+				
+				}
+			value.add(tmp1);
+		}
+//		runUpdate(value,)
+		
+	}
 	
 	/**
 	 * Untest
@@ -120,6 +125,43 @@ public class MongoDBLoader {
 		this.hostname = hostname;
 		this.port = Integer.parseInt(port);
 	}
+	
+	private void runUpdate(ArrayList<String[]> data,String[] value, String tableName){
+		final Schema defaultSchema = setSchema();
+		dc.executeUpdate(new UpdateScript() {
+			private String tableName;
+			private String[] tags;
+			private RowInsertionBuilder rows;
+			private ArrayList<String[]> data;
+			private Schema defaultSchema;
+
+			public void run(UpdateCallback callback) {
+			
+				TableCreationBuilder  tableCreator = callback.createTable(defaultSchema, tableName);
+				for(int i = 0; i < tags.length; i++){
+					tableCreator.withColumn(tags[i]);
+				}
+				Table table = tableCreator.execute();
+				rows = callback.insertInto(table);
+				for(int i = 0; i < data.size();i++){
+					for(int j = 0; j < tags.length; j++){
+						rows.value(tags[j], data.get(i)[j]);
+					}
+					rows.execute();
+				}	
+			}
+			
+			private UpdateScript init(ArrayList<String[]> data,String[] value, String tableName, Schema defaultSchema){
+				this.data = data;
+				this.tags = value;
+				this.tableName = tableName;
+				this.defaultSchema = defaultSchema;
+				return this;
+			}
+			
+		}.init(data,value,tableName,defaultSchema));
+	}
+	
 	
 	private Schema setSchema(){
 		mongoClient = new MongoClient(hostname,port);
