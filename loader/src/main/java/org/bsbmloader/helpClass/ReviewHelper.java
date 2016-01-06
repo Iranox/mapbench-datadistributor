@@ -27,7 +27,19 @@ public class ReviewHelper {
 	}
 
 	public String getProductTitle(String reviewID){
-		return product.get(Integer.parseInt(reviewID));
+		return product.get(Integer.parseInt(reviewID)-1);
+	}
+	
+	public String getProducerTitle(String reviewID){
+		return producer.get(Integer.parseInt(reviewID)-1);
+	}
+	
+	public String getPersonName(String reviewID){
+		return person.get(Integer.parseInt(reviewID)-1);
+	}
+	
+	public String getBuilderName(String reviewID){
+		return builder.get(Integer.parseInt(reviewID)-1);
 	}
 	
 	public ArrayList<String[]> getValue() {

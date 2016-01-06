@@ -60,6 +60,23 @@ public class ProductHelper {
 		this.producefeature = producefeature;
 	}
 	
+	public String[] getProducefeatureArray(){
+		String[] data = new String[producefeature.size()];
+		for(int i = 0; i < data.length;i++){
+			data[i] = producefeature.get(i)[0];
+		}
+		return data;
+	}
+	
+	public String[] getProducetypeArray(){
+		String[] data = new String[producetype.size()];
+		for(int i = 0; i < data.length;i++){
+			data[i] = producetype.get(i)[0];
+		}
+		return data;
+	}
+	
+	
 
 	
 	

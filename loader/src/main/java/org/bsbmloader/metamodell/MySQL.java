@@ -10,6 +10,7 @@ import org.apache.metamodel.DataContextFactory;
 import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.query.Query;
+import org.bsbmloader.helpClass.OfferHelper;
 import org.bsbmloader.helpClass.ProductHelper;
 import org.bsbmloader.helpClass.ReviewHelper;
 
@@ -22,6 +23,32 @@ public class MySQL {
 	private String password;	
 	private  DataContext dc;
 	
+	public OfferHelper getOffer(){
+		String[] value = new String[11];
+		ArrayList<String[]> data = new ArrayList<String[]>();
+		OfferHelper offer = new OfferHelper();
+		buildConnection();
+		try{
+			Query query = createSimpleQuery("offer");
+			DataSet ds = dc.executeQuery(query);
+			while(ds.next()){
+				value  = new String[11];	
+				readDataFromRow(ds.getRow(), value);
+				data.add(value);				
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		offer.setValue(data);
+		offer.setProduct(getTitle("label","product"));
+		offer.setVendor(getTitle("label","vendor"));
+		offer.setProducer(getTitle("label","producer"));
+		closeConnection();
+		return offer;
+		
+	}
+	
 	public ReviewHelper getReview(){
 		String[] value = new String[14];
 		ArrayList<String[]> data = new ArrayList<String[]>();
@@ -31,7 +58,7 @@ public class MySQL {
 			Query query = createSimpleQuery("review");
 			DataSet ds = dc.executeQuery(query);
 			while(ds.next()){
-				value  = new String[14];
+				value  = new String[15];
 				
 				readDataFromRow(ds.getRow(), value);
 				data.add(value);				
@@ -44,7 +71,7 @@ public class MySQL {
 		review.setProduct(getTitle("label","product"));
 		review.setPerson(getTitle("name","person"));
 		review.setProducer(getTitle("label","producer"));
-		review.setBuilder(getTitle("label","vendor"));
+		closeConnection();
 		return review;
 		
 	}
@@ -65,6 +92,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 	
@@ -84,6 +112,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 	
@@ -103,6 +132,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 	
@@ -122,6 +152,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 	
@@ -138,14 +169,14 @@ public class MySQL {
 				product.setValue(value);
       			product.setProducer( getProducer(ds.getRow().getValue(3).toString()).get(0));
       			product.setProducefeature(getProductFeature(ds.getRow().getValue(0).toString()).getProducefeature());
-      			product.setProducetype(getProductTyp(ds.getRow().getValue(0).toString()).getProducefeature());
-      			product.setVendor(getVendor(ds.getRow().getValue(0).toString()).get(0));
+      			product.setProducetype(getProductTyp(ds.getRow().getValue(0).toString()).getProducetype());
 				data.add(product);
 			}
 			ds.close();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;
 	}
 	
@@ -170,6 +201,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 	
@@ -188,6 +220,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		closeConnection();
 		return data;	
 	}
 
@@ -213,6 +246,16 @@ public class MySQL {
 		}
 	}
 	
+	private void closeConnection(){
+		try{
+			connection.close();
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
 	private  ProductHelper getProductFeature(String productId){
 		String[] value = new String[1];
 		ArrayList<String[]> data = new ArrayList<String[]>();
@@ -222,6 +265,7 @@ public class MySQL {
 					      .select("productfeature.label").where("productfeatureproduct.product").eq(productId).toQuery();
             DataSet ds = dc.executeQuery(query);
 			while(ds.next()){
+				value = new String[1];
 				readDataFromRow(ds.getRow(), value);
 				data.add(value);
 			}
@@ -231,6 +275,7 @@ public class MySQL {
 		}
 		ProductHelper tmp = new ProductHelper();
 		tmp.setProducefeature(data);
+		closeConnection();
 		return tmp;
 	}
 	
@@ -239,6 +284,7 @@ public class MySQL {
 		ArrayList<String[]> data = new ArrayList<String[]>();
 		buildConnection();
 		try{	
+			value = new String[1];
 			Query query = dc.query().from("producttype").innerJoin("producttypeproduct").on("nr", "producttype")
 					      .select("producttype.label").where("producttypeproduct.product").eq(productId).toQuery();
             DataSet ds = dc.executeQuery(query);
@@ -251,7 +297,8 @@ public class MySQL {
 			e.printStackTrace();
 		}
 		ProductHelper tmp = new ProductHelper();
-		tmp.setProducefeature(data);
+		tmp.setProducetype(data);
+		closeConnection();
 		return tmp;
 	}
 	
@@ -279,7 +326,7 @@ public class MySQL {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
+		closeConnection();
 		return data;
 		
 	}

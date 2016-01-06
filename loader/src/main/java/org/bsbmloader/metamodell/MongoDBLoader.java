@@ -1,6 +1,7 @@
 package org.bsbmloader.metamodell;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.mongodb.MongoDbDataContext;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
+import org.bsbmloader.helpClass.OfferHelper;
 import org.bsbmloader.helpClass.ProductHelper;
 import org.bsbmloader.helpClass.ReviewHelper;
 
@@ -51,22 +53,70 @@ public class MongoDBLoader{
 		runUpdate(value,tags,"person");
 	}
 	
-	public void insertReview(ReviewHelper data){
-		final Schema defaultSchema = setSchema();
+	public void insertOffer(OfferHelper data){
+		String[] tags = {"_id","product","producer","vendor","price","validFrom","validTo","deliveryDays","offerWebpage",
+				  "publisher","publishDate"};
 		String[] tmp1 = new String[data.getValue().get(0).length];
 		ArrayList<String[]> value = new ArrayList<String[]>();
 		for(int i = 0; i < data.getValue().size(); i++){
-			for(int j = 0 ; j < data.getValue().size();j++){
+			tmp1= new String[14];
+			for(int j = 0 ; j < 14;j++){
+				if(j == 1){
+					tmp1[j] = data.getProductTitle(data.getValue().get(i)[1]);
+					continue;
+				} 
 				
-				if(j == 2)
-					tmp1[j] = data.getProductTitle(Integer.toString(j));
-				else
-					tmp1 [j]= data.getValue().get(i)[j];
+				if(j == 2){
+					tmp1[j] = data.getProducerTitle(data.getValue().get(i)[2]);
+					continue;
+				}
+					
+				
+				if(j == 3){
+					tmp1[j] = data.getVendorName(data.getValue().get(i)[3]);
+					continue;
+				}
+					
+				tmp1 [j]= data.getValue().get(i)[j];
 				
 				}
 			value.add(tmp1);
 		}
-//		runUpdate(value,)
+		runUpdate(value,tags,"offer");
+		
+	}
+	
+	
+	public void insertReview(ReviewHelper data){
+		String[] tags = {"_id","product","producer","person","reviewDate","title","text","language","rating1",
+				"rating2","rating3","rating4","publisher","publishDate"};
+		String[] tmp1 = new String[data.getValue().get(0).length];
+		ArrayList<String[]> value = new ArrayList<String[]>();
+		for(int i = 0; i < data.getValue().size(); i++){
+			tmp1= new String[14];
+			for(int j = 0 ; j < 14;j++){
+				if(j == 1){
+					tmp1[j] = data.getProductTitle(data.getValue().get(i)[1]);
+					continue;
+				} 
+				
+				if(j == 2){
+					tmp1[j] = data.getProducerTitle(data.getValue().get(i)[2]);
+					continue;
+				}
+					
+				
+				if(j == 3){
+					tmp1[j] = data.getPersonName(data.getValue().get(i)[3]);
+					continue;
+				}
+					
+				tmp1 [j]= data.getValue().get(i)[j];
+				
+				}
+			value.add(tmp1);
+		}
+		runUpdate(value,tags,"review");
 		
 	}
 	
@@ -85,24 +135,39 @@ public class MongoDBLoader{
 			public void run(UpdateCallback callback) {
 				String[] tags = {"_id", "label","comment","producter","propertyNum1","propertyNum2","propertyNum3","propertyNum4","propertyNum5",
 				        "propertyNum6","propertyTex1","propertyTex2","propertyTex3","propertyTex4","propertyTex5","propertyTex6",
-				        "publisher","publishDate"};
+				        "publisher","publishDate","productfeature","producttype"};
 				TableCreationBuilder tableCreation = callback.createTable(defaultSchema, "product");
 				for (int i = 0; i < tags.length; i ++){
 					tableCreation.withColumn(tags[i]);
 				}
 				Table table = tableCreation.execute();
 				String[] producerTags = data.get(0).getProducerTags();
+				rows = callback.insertInto(table);
 				for(int i = 0; i < data.size(); i++){
 					Map<String, Object> nestedObj = new HashMap<String, Object>();
 					for(int indexNestedObj = 0; indexNestedObj < data.get(i).getProducer().length; indexNestedObj++){
 						nestedObj.put(producerTags[indexNestedObj], data.get(i).getProducer()[indexNestedObj]);
 					};
-					for(int indexInsert = 0 ; indexInsert < data.get(i).getValue().length;indexInsert++){
-						if(indexInsert != 3){
-							rows = callback.insertInto("table").value(tags[indexInsert],data.get(i).getValue()[indexInsert] );
-						}else{
-							rows = callback.insertInto("table").value(tags[3],nestedObj);
+					
+					for(int indexInsert = 0 ; indexInsert < 20;indexInsert++){
+						if(indexInsert == 3){
+							rows.value(tags[3],nestedObj);
+							continue;
+							
 						}
+						
+						if(indexInsert == 18){
+							rows.value(tags[18], Arrays.asList(data.get(i).getProducefeatureArray()));
+							continue;
+						}
+						
+						if(indexInsert == 19){
+							rows.value(tags[19], Arrays.asList(data.get(i).getProducetypeArray()));
+							continue;
+						}	
+					
+						rows.value(tags[indexInsert],data.get(i).getValue()[indexInsert] );
+						
 					}
 					
 				  rows.execute();
