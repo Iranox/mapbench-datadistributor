@@ -5,6 +5,8 @@ import java.sql.SQLException;
 
 import com.mysql.jdbc.Driver;
 
+import org.apache.log4j.Logger;
+import org.bsbmloader.main.Main;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -13,6 +15,8 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 public class Database {
 	private SimpleDriverDataSource datasource;
 	private Connection connection = null;
+	private static org.apache.log4j.Logger log = Logger.getLogger(Database.class);
+
 	
 
 	
@@ -25,7 +29,7 @@ public class Database {
 	}
 	
 	public void initBSBMDatabase() throws SQLException{
-		System.out.println("Start Import Data!");
+		log.info("Start Import Data!");
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.addScript(new ClassPathResource("dataset/01ProductFeature.sql"));
 		populator.addScript(new ClassPathResource("dataset/02ProductType.sql"));
@@ -37,6 +41,7 @@ public class Database {
 		populator.addScript(new ClassPathResource("dataset/08Offer.sql"));
 		populator.addScript(new ClassPathResource("dataset/09Person.sql"));
 		populator.addScript(new ClassPathResource("dataset/10Review.sql"));
+		populator.addScript(new ClassPathResource("dataset/key.sql"));
 
 		try {
 			connection = DataSourceUtils.getConnection(datasource);
@@ -46,7 +51,7 @@ public class Database {
 				DataSourceUtils.releaseConnection(connection, datasource);
 			}
 		}
-		System.out.println("Data Import done!");
+		log.info("Data Import done!");
 	}
 	
 //	For Testing

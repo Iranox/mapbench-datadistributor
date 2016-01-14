@@ -5,16 +5,19 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.DataContextFactory;
 import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.query.Query;
-import org.bsbmloader.helpClass.OfferHelper;
-import org.bsbmloader.helpClass.ProductHelper;
-import org.bsbmloader.helpClass.ReviewHelper;
-
-
+import org.apache.metamodel.query.builder.TableFromBuilder;
+import org.apache.metamodel.schema.Column;
+import org.apache.metamodel.schema.Relationship;
+import org.apache.metamodel.schema.Schema;
+import org.apache.metamodel.schema.Table;
+import org.bsbmloader.helper.Helper;
+import org.bsbmloader.main.Main;
 
 public class MySQL {
 	private Connection connection ;
@@ -22,163 +25,67 @@ public class MySQL {
 	private String username;
 	private String password;	
 	private  DataContext dc;
-	
-	public OfferHelper getOffer(){
-		String[] value = new String[11];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		OfferHelper offer = new OfferHelper();
-		buildConnection();
-		try{
-			Query query = createSimpleQuery("offer");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[11];	
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);				
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		offer.setValue(data);
-		offer.setProduct(getTitle("label","product"));
-		offer.setVendor(getTitle("label","vendor"));
-		offer.setProducer(getTitle("label","producer"));
-		closeConnection();
-		return offer;
-		
-	}
-	
-	public ReviewHelper getReview(){
-		String[] value = new String[14];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		ReviewHelper review = new ReviewHelper();
-		buildConnection();
-		try{
-			Query query = createSimpleQuery("review");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[15];
-				
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);				
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		review.setValue(data);
-		review.setProduct(getTitle("label","product"));
-		review.setPerson(getTitle("name","person"));
-		review.setProducer(getTitle("label","producer"));
-		closeConnection();
-		return review;
-		
-	}
+	private ArrayList<Helper> data = new ArrayList<Helper>();
+	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
 
-	public ArrayList<String[]> getAllVendor(){
-		String[] value = new String[7];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("vendor");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[7];
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;	
+//	TODO Relationship
+	public  ArrayList<Helper> readDataBase(){
+		buildConnection();		
+		Schema schema = dc.getSchemaByName("benchmark");
+		schema.getTableByName("benchmark");
+	    Table[] tables = schema.getTables();	   	    
+	    for(Table table: tables){   	
+	    	 	Helper	help = new Helper();
+		    	help.setTable(table.getName());
+		    	help.setColumns(table.getColumns());
+		    	help.setRows(getRows(table.getName()));	
+		    	data.add(help);	   
+	    }    
+	    closeConnection();
+	    return data;
+		
 	}
 	
-	public ArrayList<String[]> getAllPersons(){
-		String[] value = new String[6];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("person");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[6];
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;	
+	public void test(){
+//		SELECT * FROM ( product p inner join producer pp on p.producer = pp.nr) inner join person on p.publisher = person.nr
+		
+		buildConnection();		
+		Schema schema = dc.getSchemaByName("benchmark");
+		schema.getTableByName("benchmark");
+	    Table table = schema.getTableByName("product");
+	    
+	    dc.query().from("product").innerJoin("producer").on("producer", "nr").selectAll();
+	    
+	  
+	        
+	    closeConnection();
+		
 	}
 	
-	public ArrayList<String[]> getAllProductFeature(){
-		String[] value = new String[5];
-		ArrayList<String[]> data = new ArrayList<String[]>();
+	public void getComplexData(String tableName, String id){
 		buildConnection();
-		try{	
-			Query query = createSimpleQuery("productfeature");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[5];
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
+		if(!tableName.equals("productfeatureproduct") && !tableName.equals("producttypeproduct")){
+			Schema schema = dc.getSchemaByName("benchmark");
+			schema.getTableByName("benchmark");
+			Table table = schema.getTableByName(tableName);
+			for(Column relation: table.getForeignKeys()){
+				log.info(relation.getName());
+				if(!relation.getName().equals("publisher")){	
+					DataSet ds = dc.query().from(relation.getName()).selectAll().where("nr").eq(id).execute();
+					while(ds.next()){
+						log.info(ds.getRow().toString());
+					}
+				}
+				
+					
+				}
+			
 		}
+	
+		
 		closeConnection();
-		return data;	
 	}
 	
-	public ArrayList<String[]> getAllProductType(){
-		String[] value = new String[6];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("producttype");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value  = new String[6];
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;	
-	}
-	
-	public ArrayList<ProductHelper> getAllProduct(){
-	    ArrayList<ProductHelper> data = new ArrayList<ProductHelper>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("product");
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-			    String[] value  = new String[18];
-				readDataFromRow(ds.getRow(), value);
-				ProductHelper product = new ProductHelper();
-				product.setValue(value);
-      			product.setProducer( getProducer(ds.getRow().getValue(3).toString()).get(0));
-      			product.setProducefeature(getProductFeature(ds.getRow().getValue(0).toString()).getProducefeature());
-      			product.setProducetype(getProductTyp(ds.getRow().getValue(0).toString()).getProducetype());
-				data.add(product);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;
-	}
 	
 	public void setConnectionProperties(String jdbcUrl, String username, String password){
 		this.jdbcUrl = jdbcUrl;
@@ -186,53 +93,7 @@ public class MySQL {
 		this.password = password;
 	}
 	
-	private ArrayList<String[]> getProducer(String productNumber){
-		String[] value = new String[7];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("producer",Integer.parseInt(productNumber));
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;	
-	}
-	
-	private ArrayList<String[]> getVendor(String productNumber){
-		String[] value = new String[7];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = createSimpleQuery("vendor",Integer.parseInt(productNumber));
-			DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;	
-	}
 
-	private Query createSimpleQuery(String tableName, int id){
-			Query query = dc.query().from(tableName).selectAll().where("nr").eq(id).toQuery();
-			return query;
-	    }
-
-    private Query createSimpleQuery(String tableName){
-		Query query = dc.query().from(tableName).selectAll().toQuery();
-		return query;
-    }
 	
 	private void buildConnection(){
 		try{
@@ -255,80 +116,17 @@ public class MySQL {
 		
 		
 	}
-	
-	private  ProductHelper getProductFeature(String productId){
-		String[] value = new String[1];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			Query query = dc.query().from("productfeature").innerJoin("productfeatureproduct").on("nr", "productFeature")
-					      .select("productfeature.label").where("productfeatureproduct.product").eq(productId).toQuery();
-            DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				value = new String[1];
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close(); 
-		}catch(Exception e){
-			e.printStackTrace();
+
+	private ArrayList<Row> getRows(String tableName){
+		ArrayList<Row> rows = new ArrayList<Row>();
+		DataSet ds = dc.query().from("benchmark." + tableName).selectAll().execute();
+		while(ds.next()){
+			rows.add(ds.getRow());
 		}
-		ProductHelper tmp = new ProductHelper();
-		tmp.setProducefeature(data);
-		closeConnection();
-		return tmp;
+		ds.close();
+		return rows;
 	}
 	
-	private ProductHelper getProductTyp(String productId){
-		String[] value = new String[1];
-		ArrayList<String[]> data = new ArrayList<String[]>();
-		buildConnection();
-		try{	
-			value = new String[1];
-			Query query = dc.query().from("producttype").innerJoin("producttypeproduct").on("nr", "producttype")
-					      .select("producttype.label").where("producttypeproduct.product").eq(productId).toQuery();
-            DataSet ds = dc.executeQuery(query);
-			while(ds.next()){
-				readDataFromRow(ds.getRow(), value);
-				data.add(value);
-			}
-			ds.close(); 
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		ProductHelper tmp = new ProductHelper();
-		tmp.setProducetype(data);
-		closeConnection();
-		return tmp;
-	}
-	
-	private String[] readDataFromRow(Row row, String[] value){
-		for(int index = 0; index < row.size(); index++){
-			if(row.getValue(index)!= null)
-			   value[index] = row.getValue(index).toString();
-			else
-				value[index] = "null";
-		}
-		return value;
-	}
-	
-	private ArrayList<String> getTitle(String title, String table ){
-		ArrayList<String> data = new ArrayList<String>();
-		buildConnection();
-		try {
-			Query query = dc.query().from(table).select(title).toQuery();
-			dc.executeQuery(query);
-			DataSet ds = dc.executeQuery(query);
-				while(ds.next()){
-					data.add(ds.getRow().getValue(0).toString());
-				}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		closeConnection();
-		return data;
-		
-	}
+
 
 }

@@ -2,59 +2,84 @@ package org.bsbmloader.main;
 
 
 import java.sql.SQLException;
-import org.bsbmloader.loader.Database;
-import org.bsbmloader.metamodell.MongoDBLoader;
-import org.bsbmloader.metamodell.MySQL;
 
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.log4j.Logger;
+import org.apache.commons.cli.CommandLine;
+
+import org.bsbmloader.loader.Database;
+import org.bsbmloader.metamodell.MongoDB;
+import org.bsbmloader.metamodell.MySQL;
+import org.bsbmloader.metamodell.NoSQLLoader;
 
 
 public class Main 
 {
 	private static InputReader t = new  InputReader();
 	private static MySQL mysql;
+	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
 
 	
     public static void main( String[] args ){
-    	String input ;
-    	boolean endlessLoop = true;
-    	while(endlessLoop){
-    		showOptions();
-        	InputReader inputReader = new InputReader();
-        	input = inputReader.readInput("Your option: ");
-        	try{
-        		int i = Integer.parseInt(input);
-        		switch(i){
-        		   case 1 : 
-        			  startIntDatabase();
-        		      break;
-        		   case 2: 
-        			   startParseToMongoDB();
-        			   break;
-        		   case 3:
-        			  endlessLoop = false;
-        			  break;
-        		    default:
-        			   System.out.println("Unknown Service");
-        		 }
-        	  }catch(Exception e){
-        			e.printStackTrace();
-        		
-        		}
+    	CommandLineParser parser = new BasicParser();
+    	Options options = new Options();
+    	
+    	options.addOption("h", "help", false, "Show help");
+    	options.addOption("importToMySQL", false, "Start to import the data to MySQL");
+    	options.addOption("u","userMySQL",true,"The username in MySQL");
+    	options.addOption("p","passwordMySQL",true,"The password in MySQL");
+    	options.addOption("urlMySQL",true,"The jdbc-url for MySQL. For example: jdbc:mysql://localhost/benchmark");
+    	options.addOption("portMongo",true,"The username in MongoDB");
+    	options.addOption("hostMongo",true,"the password in MongoDB");
+    	options.addOption("parseToMongo",false,"Start to parse the MySQl databaste to a MongoDB database");
+    	
+    	
+    	try{
+    		CommandLine commandLine = parser.parse(options, args);
+    		if(commandLine.hasOption("h")){
+    			HelpFormatter formater = new HelpFormatter();
+    			formater.printHelp("Parameter", options);
+    		}
     		
+    		if(commandLine.hasOption("importToMySQL") && hasMySQLConnectionProperties(commandLine)){
+    			Database db = new Database();
+    			db.setConnectionProperties(commandLine.getOptionValue("urlMySQL"), commandLine.getOptionValue("u"), commandLine.getOptionValue("p"));
+    			db.initBSBMDatabase();
+    			
+    		}
+    		
+    		if(commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)){
+    			if(commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")){
+    				MySQL mysql = new MySQL();
+    				mysql.setConnectionProperties(commandLine.getOptionValue("urlMySQL"), commandLine.getOptionValue("u"), commandLine.getOptionValue("p"));
+    				MongoDB mongo = new MongoDB();
+    				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+    				NoSQLLoader nosql = new NoSQLLoader();
+    				nosql.insertSimpleTable(mongo.getDB(), mysql.readDataBase());
+    				
+    			}		
+    			else
+    				log.error("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
+    						+ "For more Inforamtion use -h or --help!");	
+    		}
+    		
+    	}catch(Exception e){
+    	     log.error(e.getMessage());
     	}
     	
-    	}
+    	
+   }
     
-    private static void startIntDatabase(){
+    private static void startIntDatabase(String username, String password, String url){
     	 Database db = new Database();
-         String username =  t.readInput("Please insert Username: ");
-         String password = t.readInput("Please insert Password: ");
-         String url = t.readInput("Please insert JDBC-url: ");
          db.setConnectionProperties(url, username, password);
          try{
          	db.initBSBMDatabase();
          }catch(SQLException e){
-         	System.out.println(e.getMessage() + " " + e.getErrorCode());
+         	log.error(e.getMessage() + " " + e.getErrorCode());
          }	
     }
     
@@ -62,33 +87,34 @@ public class Main
         mysql = setMySql();
     	String hostname =  t.readInput("Please insert MongoDB Hostname: ");
         String port = t.readInput("Please insert MongoDB Portnumber: ");
-        MongoDBLoader mongo = new MongoDBLoader();
-    	mongo.setConnectionProperties(hostname,port);
-    	System.out.println("Start Parse to Mongodb");
-    	mongo.insertVendor(mysql.getAllVendor());
-    	mongo.insertProductFeature(mysql.getAllProductFeature());
-    	mongo.insertProductType(mysql.getAllProductType());
-    	mongo.insertPersons(mysql.getAllPersons());
-    	mongo.insertOffer(mysql.getOffer());
-        mongo.insertProduct(mysql.getAllProduct());
-    	System.out.println("Done");
+    	log.info("Start Parse to Mongodb");
+    	log.info("Done");
     }
     
     private static MySQL setMySql(){
     	mysql = new MySQL();
-    	String username =  t.readInput("Please insert Username: ");
-        String password = t.readInput("Please insert Password (uncrypt): ");
-        String url = t.readInput("Please insert JDBC-url: ");
-    	mysql.setConnectionProperties(url, username, password);
     	return mysql;
     	
     }
     
-    private static void showOptions(){
-    	System.out.println("Select an option");
-    	System.out.println("Initialize a MySQL database with BSBM. Press 1");
-    	System.out.println("Parse from MySQl Benchmark to MongoDB (not Completed). Press 2");
-    	System.out.println("Exit. Press 3");
+    private static boolean hasMySQLConnectionProperties(CommandLine commandLine){
+    	boolean hasProperties = false;
+    	try{
+    		if(commandLine.hasOption("u")  && commandLine.hasOption("urlMySQL"))
+    			hasProperties = true;	
+			else
+				log.error("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
+						+ "For more Inforamtion use -h or --help!");	
+    		
+    	}catch(Exception e){
+    		
+    	}
+    	
+    	return hasProperties;
     }
+    
+    
+    
+
 }
     	  
