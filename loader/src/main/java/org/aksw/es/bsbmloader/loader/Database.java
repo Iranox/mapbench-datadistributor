@@ -5,30 +5,26 @@ import java.sql.SQLException;
 
 import com.mysql.jdbc.Driver;
 
-import org.aksw.es.bsbmloader.main.Main;
 import org.apache.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator; 
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 public class Database {
 	private SimpleDriverDataSource datasource;
 	private Connection connection = null;
 	private static org.apache.log4j.Logger log = Logger.getLogger(Database.class);
 
-	
-
-	
-	public void setConnectionProperties(String jdbcUrl, String username, String password){
+	public void setConnectionProperties(String jdbcUrl, String username, String password) {
 		datasource = new SimpleDriverDataSource();
 		datasource.setDriverClass(Driver.class);
 		datasource.setUrl(jdbcUrl);
 		datasource.setPassword(password);
 		datasource.setUsername(username);
 	}
-	
-	public void initBSBMDatabase() throws SQLException{
+
+	public void initBSBMDatabase() throws SQLException {
 		log.info("Start Import Data!");
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.addScript(new ClassPathResource("dataset/01ProductFeature.sql"));
@@ -53,21 +49,20 @@ public class Database {
 		}
 		log.info("Data Import done!");
 	}
-	
-//	For Testing
-	public SimpleDriverDataSource getDatasource(){
+
+	// For Testing
+	public SimpleDriverDataSource getDatasource() {
 		return datasource;
 	}
-	
-//	For Testing
-	public Connection getConnection(){
+
+	// For Testing
+	public Connection getConnection() {
 		return connection;
 	}
-	
-//	for Testing
-	public  void setConnection(SimpleDriverDataSource datasource){
+
+	// for Testing
+	public void setConnection(SimpleDriverDataSource datasource) {
 		connection = DataSourceUtils.getConnection(datasource);
 	}
-	
 
 }

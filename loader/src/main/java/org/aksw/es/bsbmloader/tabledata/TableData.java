@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.helper;
+package org.aksw.es.bsbmloader.tabledata;
 
 import java.util.ArrayList;
 
@@ -6,13 +6,13 @@ import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Schema;
 
-public class Helper {
+public class TableData {
 	private Schema schema;
 	private Column[] columns;
 	private ArrayList<Row> rows = new ArrayList<Row>();
 	private ArrayList<Column[]> fkColumns = new ArrayList<Column[]>();
 	private ArrayList<Row[]> fkRows = new ArrayList<Row[]>();
-	
+
 	public ArrayList<Column[]> getFkColumns() {
 		return fkColumns;
 	}
@@ -30,6 +30,7 @@ public class Helper {
 	}
 
 	private ArrayList<DataSet> dataset = new ArrayList<DataSet>();
+
 	public ArrayList<DataSet> getDataset() {
 		return dataset;
 	}
@@ -39,7 +40,7 @@ public class Helper {
 	}
 
 	private String table;
-	
+
 	public String getTable() {
 		return table;
 	}
@@ -51,7 +52,7 @@ public class Helper {
 	public Schema getSchema() {
 		return schema;
 	}
-	
+
 	public void setSchema(Schema schema) {
 		this.schema = schema;
 	}
@@ -59,24 +60,21 @@ public class Helper {
 	public ArrayList<Row> getRows() {
 		return rows;
 	}
-	
+
 	public void setRows(ArrayList<Row> rows) {
 		this.rows = rows;
 	}
-	
+
 	public Column[] getColumns() {
 		return columns;
 	}
-	
+
 	public void setColumns(Column[] columns) {
 		this.columns = columns;
 	}
-	
-	public void setRow(Row dataset){
+
+	public void setRow(Row dataset) {
 		rows.add(dataset);
 	}
-	
-	
-	
 
 }

@@ -1,6 +1,6 @@
 package org.aksw.es.bsbmloader.metamodell;
 
-public class Loader {
+public class ConnectionProperties {
 	private String hostname;
 	private int port;
 	private String username;
