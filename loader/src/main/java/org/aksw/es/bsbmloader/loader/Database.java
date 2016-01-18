@@ -1,12 +1,18 @@
 package org.aksw.es.bsbmloader.loader;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import javax.ws.rs.core.Application;
 
 import com.mysql.jdbc.Driver;
 
 import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -37,6 +43,33 @@ public class Database {
 		populator.addScript(new ClassPathResource("dataset/08Offer.sql"));
 		populator.addScript(new ClassPathResource("dataset/09Person.sql"));
 		populator.addScript(new ClassPathResource("dataset/10Review.sql"));
+		populator.addScript(new ClassPathResource("dataset/key.sql"));
+
+		try {
+			connection = DataSourceUtils.getConnection(datasource);
+			populator.populate(connection);
+		} finally {
+			if (connection != null) {
+				DataSourceUtils.releaseConnection(connection, datasource);
+			}
+		}
+		log.info("Data Import done!");
+	}
+	
+	public void initBSBMDatabase(String path) throws SQLException {
+		log.info("Start Import Data!");	
+		
+		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "01ProductFeature.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "02ProductType.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "03Producer.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "04Product.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "05ProductTypeProduct.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "06ProductFeatureProduct.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "07Vendor.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "08Offer.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "09Person.sql"));
+		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "10Review.sql"));
 		populator.addScript(new ClassPathResource("dataset/key.sql"));
 
 		try {

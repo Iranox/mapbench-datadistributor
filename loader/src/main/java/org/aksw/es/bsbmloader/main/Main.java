@@ -28,6 +28,7 @@ public class Main {
 		options.addOption("portMongo", true, "The username in MongoDB");
 		options.addOption("hostMongo", true, "the password in MongoDB");
 		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
+		options.addOption("file", true, "Use your BSBM sqlfiles");
 
 		try {
 			CommandLine commandLine = parser.parse(options, args);
@@ -37,8 +38,14 @@ public class Main {
 			}
 
 			if (commandLine.hasOption("importToMySQL") && hasMySQLConnectionProperties(commandLine)) {
-				startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
-						commandLine.getOptionValue("urlMySQL"));
+				if (!commandLine.hasOption("file")) {
+					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
+							commandLine.getOptionValue("urlMySQL"));
+				} else {
+					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
+							commandLine.getOptionValue("urlMySQL"), commandLine.getOptionValue("file"));
+				}
+
 			}
 
 			if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
@@ -61,6 +68,16 @@ public class Main {
 		db.setConnectionProperties(url, username, password);
 		try {
 			db.initBSBMDatabase();
+		} catch (SQLException e) {
+			log.error(e.getMessage() + " " + e.getErrorCode());
+		}
+	}
+
+	private static void startIntDatabase(String username, String password, String url, String path) {
+		Database db = new Database();
+		db.setConnectionProperties(url, username, password);
+		try {
+			db.initBSBMDatabase(path);
 		} catch (SQLException e) {
 			log.error(e.getMessage() + " " + e.getErrorCode());
 		}
