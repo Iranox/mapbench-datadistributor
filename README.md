@@ -10,4 +10,4 @@ Important: The database in the jdbc muss exist.
 
 ## parse to MongoDB
 
-``-parseToMongo -u root -p Seraphin11!  -urlMySQL jdbc:mysql://localhost/benchmark -hostMongo localhost -portMongo 27017 ``
+``-parseToMongo -u root -p password  -urlMySQL jdbc:mysql://localhost/benchmark -hostMongo localhost -portMongo 27017 ``
