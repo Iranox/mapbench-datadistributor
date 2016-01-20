@@ -91,7 +91,7 @@ public class Main {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 		NoSQLLoader nosql = new NoSQLLoader();
-		nosql.insertSimpleTable(mongo.getDB(), mysql.readDataBase());
+		nosql.insertData(mongo.getDB(), mysql.test());
 		log.info("Done");
 	}
 

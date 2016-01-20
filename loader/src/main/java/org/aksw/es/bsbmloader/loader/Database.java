@@ -1,18 +1,16 @@
 package org.aksw.es.bsbmloader.loader;
 
-import java.io.File;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.ws.rs.core.Application;
+
 
 import com.mysql.jdbc.Driver;
 
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResourceLoader;
-import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;

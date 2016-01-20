@@ -4,8 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
-import org.aksw.es.bsbmloader.tabledata.TableData;
+
+import org.aksw.es.bsbmloader.tabledata.TableDataForgeinKey;
+import org.aksw.es.bsbmloader.tabledata.TableDataPrimary;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.DataContextFactory;
@@ -13,6 +16,7 @@ import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 
 import org.apache.metamodel.schema.Column;
+import org.apache.metamodel.schema.Relationship;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 
@@ -22,68 +26,55 @@ public class MySQL {
 	private String username;
 	private String password;
 	private DataContext dc;
-	private ArrayList<TableData> data = new ArrayList<TableData>();
 	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
 
-	// TODO Relationship
-	public ArrayList<TableData> readDataBase() {
+
+
+	public ArrayList<TableDataPrimary> test() {
+		log.info("Read Data form MySQL");
 		buildConnection();
+		ArrayList<TableDataPrimary> tableData = new ArrayList<TableDataPrimary>();
 		Schema schema = dc.getSchemaByName("benchmark");
 		schema.getTableByName("benchmark");
 		Table[] tables = schema.getTables();
-		for (Table table : tables) {
-			TableData help = new TableData();
-			help.setTable(table.getName());
-			help.setColumns(table.getColumns());
-			help.setRows(getRows(table.getName()));
-			data.add(help);
-		}
-		closeConnection();
-		return data;
-
-	}
-
-	public void test() {
-		// SELECT * FROM ( product p inner join producer pp on p.producer =
-		// pp.nr) inner join person on p.publisher = person.nr
-
-		buildConnection();
-		Schema schema = dc.getSchemaByName("benchmark");
-		schema.getTableByName("benchmark");
-		Table table = schema.getTableByName("product");
-
-		dc.query().from("product").innerJoin("producer").on("producer", "nr").selectAll();
-
-		closeConnection();
-
-	}
-
-	public void getComplexData(String tableName, String id) {
-		buildConnection();
-		if (!tableName.equals("productfeatureproduct") && !tableName.equals("producttypeproduct")) {
-			Schema schema = dc.getSchemaByName("benchmark");
-			schema.getTableByName("benchmark");
-			Table table = schema.getTableByName(tableName);
-			for (Column relation : table.getForeignKeys()) {
-				log.info(relation.getName());
-				if (!relation.getName().equals("publisher")) {
-					DataSet ds = dc.query().from(relation.getName()).selectAll().where("nr").eq(id).execute();
-					while (ds.next()) {
-						log.info(ds.getRow().toString());
-					}
-				}
+		for(Table table : tables){
+			TableDataPrimary tmp = new TableDataPrimary();
+			ArrayList<TableDataForgeinKey> fkData = new ArrayList<TableDataForgeinKey>();
+			tmp.setTable(table);
+			tmp.setRows(getRows(table.getName()));
+			for(Relationship relationship : table.getForeignKeyRelationships()){
+				TableDataForgeinKey fkTmp = new TableDataForgeinKey();
+				tmp.insertRelationship(relationship.getForeignColumns()[0].getName(), relationship.getPrimaryTable().getName()); // Column  PrimaryTable
+				fkTmp.setRows(getForgeinData(relationship.getPrimaryTable().getName(), relationship.getPrimaryColumns()[0])); // Daten der Primary Table einfügen
+				fkTmp.setTable(relationship.getPrimaryTable());
+				tmp.insertFkTable(relationship.getPrimaryTable().getName().toString(), fkTmp);
 
 			}
-
+			tableData.add(tmp);
 		}
 
 		closeConnection();
-	}
+		log.info("Read Data form MySQL -- Done");
+		return tableData;
 
+	}
+	
 	public void setConnectionProperties(String jdbcUrl, String username, String password) {
 		this.jdbcUrl = jdbcUrl;
 		this.username = username;
 		this.password = password;
+	}
+
+	private HashMap<String, Row> getForgeinData(String table, Column primaryKey){
+		HashMap<String, Row> rows = new HashMap<String, Row>();
+		DataSet ds = dc.query().from("benchmark." + table).selectAll().execute();
+		while(ds.next()){
+			rows.put(ds.getRow().getValue(primaryKey).toString(), ds.getRow());
+		}
+		ds.close();
+		
+		return rows;
+	
 	}
 
 	private void buildConnection() {
