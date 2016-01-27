@@ -1,9 +1,15 @@
 package org.aksw.es.bsbmloader.metamodell;
 
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.aksw.es.bsbmloader.tabledata.TableDataPrimary;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
@@ -25,7 +31,7 @@ public class NoSQLLoader {
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
 
 	/**
-	 *Grober Entwurf. Muss überarbeitet werden.
+	 * Grober Entwurf. Muss überarbeitet werden.
 	 */
 	public void insertComplexData(HashMap<String, ArrayList<Row>> readRows, Table[] tables, String fkColumn,
 			Column column) {
@@ -41,10 +47,8 @@ public class NoSQLLoader {
 		}
 
 	}
-	
 
-
-	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception{
+	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dc = dc;
 	}
 
@@ -73,12 +77,27 @@ public class NoSQLLoader {
 						for (Column column : tableDataprim.getTable().getColumns()) {
 							String fk = tableDataprim.getRelationshipTable(column.getName());
 							if (fk == null) {
-								if (row.getValue(column.getColumnNumber()) == null){
-									rows.value(column.getName(), "null");
+								Object value;
+								if (column.getType().isTimeBased()) {
+									log.info(row.getValue(column.getColumnNumber()).toString());
+									DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+									Date time = null;
+									try {
+										time = dateFormat.parse(row.getValue(column.getColumnNumber()).toString());
+									}  catch (ParseException e) {
+										 dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+										 try {
+											time = dateFormat.parse(row.getValue(column.getColumnNumber()).toString());
+										} catch (ParseException e1) {
+											log.info("",e);
+										}
+									}
+									value = time;
+								} else {
+									value = row.getValue(column.getColumnNumber());
 								}
-								else{
-									rows.value(column.getName(), row.getValue(column.getColumnNumber()).toString());
-								}			
+
+								rows.value(column.getName(), value);
 
 							} else {
 								HashMap<String, Row> tmp = tableDataprim.getFKTable(fk).getRows();
