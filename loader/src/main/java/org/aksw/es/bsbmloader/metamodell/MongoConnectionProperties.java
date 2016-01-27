@@ -10,12 +10,12 @@ public class MongoConnectionProperties extends ConnectionProperties {
 	private DB db;
 	private UpdateableDataContext dc;
 
-	public void setConnectionProperties(String hostname, String port) {
+	public void setConnectionProperties(String hostname, String port) throws Exception {
 		setHostname(hostname);
 		setPort(Integer.parseInt(port));
 	}
 
-	public UpdateableDataContext getDB() {
+	public UpdateableDataContext getDB() throws Exception {
 		MongoClient mongoClient = new MongoClient(getHostname(), getPort());
 		db = mongoClient.getDB("bsbm");
 		dc = new MongoDbDataContext(db);

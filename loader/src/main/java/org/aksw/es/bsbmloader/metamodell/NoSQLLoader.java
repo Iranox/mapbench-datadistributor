@@ -3,7 +3,6 @@ package org.aksw.es.bsbmloader.metamodell;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
 import org.aksw.es.bsbmloader.tabledata.TableDataPrimary;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
@@ -12,8 +11,11 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
+import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Schema;
+import org.apache.metamodel.schema.Table;
+import org.apache.metamodel.update.Update;
 
 /**
  * @author Tobias
@@ -22,9 +24,29 @@ public class NoSQLLoader {
 	private UpdateableDataContext dc;
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
 
+	/**
+	 *Grober Entwurf. Muss überarbeitet werden.
+	 */
+	public void insertComplexData(HashMap<String, ArrayList<Row>> readRows, Table[] tables, String fkColumn,
+			Column column) {
+		for (Table table : tables) {
+			if (readRows.get(table.getName()) != null) {
+				Update update = new Update(table);
+				for (Row row : readRows.get(table.getName())) {
+					dc.executeUpdate(
+							update.where(table.getPrimaryKeys()[0]).eq(fkColumn).value(fkColumn, row.getValue(column)));
+				}
 
-	public void insertData(UpdateableDataContext da, ArrayList<TableDataPrimary> tableData) {
-		dc = da;
+			}
+		}
+
+	}
+
+	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception{
+		this.dc = dc;
+	}
+
+	public void insertData(ArrayList<TableDataPrimary> tableData) throws Exception {
 		dc.executeUpdate(new UpdateScript() {
 			private ArrayList<TableDataPrimary> tableData;
 			private Schema defaultSchema;
@@ -40,7 +62,7 @@ public class NoSQLLoader {
 					tableCreation.execute();
 				}
 				log.info("Create Schema -- Done");
-				
+
 				log.info("Insert into NoSQL Database");
 
 				for (TableDataPrimary tableDataprim : tableData) {

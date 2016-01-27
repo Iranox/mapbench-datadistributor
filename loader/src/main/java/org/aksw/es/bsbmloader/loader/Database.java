@@ -28,7 +28,7 @@ public class Database {
 		datasource.setUsername(username);
 	}
 
-	public void initBSBMDatabase() throws SQLException {
+	public void initBSBMDatabase() throws Exception {
 		log.info("Start Import Data!");
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.addScript(new ClassPathResource("dataset/01ProductFeature.sql"));
@@ -54,7 +54,7 @@ public class Database {
 		log.info("Data Import done!");
 	}
 	
-	public void initBSBMDatabase(String path) throws SQLException {
+	public void initBSBMDatabase(String path) throws Exception {
 		log.info("Start Import Data!");	
 		
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
