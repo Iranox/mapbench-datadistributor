@@ -54,9 +54,11 @@ public class Main {
 				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
 					startParseToMongoDB(commandLine);
 
-				} else
+				} else{
 					log.info("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
 							+ "For more Inforamtion use -h or --help!");
+				}
+			
 			}
 			
 			if(commandLine.getArgs() == null){
@@ -105,11 +107,14 @@ public class Main {
 	private static boolean hasMySQLConnectionProperties(CommandLine commandLine) throws Exception {
 		boolean hasProperties = false;
 
-		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql"))
+		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql")){
 			hasProperties = true;
-		else
+		}
+		else{
 			log.error("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
 					+ "For more Inforamtion use -h or --help!");
+		}
+			
 
 		return hasProperties;
 	}

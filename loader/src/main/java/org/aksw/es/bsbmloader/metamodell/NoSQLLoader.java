@@ -71,10 +71,12 @@ public class NoSQLLoader {
 						for (Column column : tableDataprim.getTable().getColumns()) {
 							String fk = tableDataprim.getRelationshipTable(column.getName());
 							if (fk == null) {
-								if (row.getValue(column.getColumnNumber()) == null)
+								if (row.getValue(column.getColumnNumber()) == null){
 									rows.value(column.getName(), "null");
-								else
+								}
+								else{
 									rows.value(column.getName(), row.getValue(column.getColumnNumber()).toString());
+								}			
 
 							} else {
 								HashMap<String, Row> tmp = tableDataprim.getFKTable(fk).getRows();
