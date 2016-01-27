@@ -32,6 +32,8 @@ public class Main {
 		options.addOption("hostMongo", true, "the password in MongoDB");
 		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
 		options.addOption("file", true, "Use your BSBM sqlfiles");
+		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
+
 		try {
 			CommandLine commandLine = parser.parse(options, args);
 			if (commandLine.hasOption("h")) {
@@ -54,22 +56,22 @@ public class Main {
 				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
 					startParseToMongoDB(commandLine);
 
-				} else{
+				} else {
 					log.info("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
 							+ "For more Inforamtion use -h or --help!");
 				}
-			
+
 			}
-			
-			if(commandLine.getArgs() == null){
+
+			if (commandLine.getArgs() == null) {
 				HelpFormatter formater = new HelpFormatter();
 				formater.printHelp("Parameter", options);
 				log.info("Test");
-			
+
 			}
 
 		} catch (Exception e) {
-			log.error("",e);
+			log.error("", e);
 		}
 
 	}
@@ -84,37 +86,37 @@ public class Main {
 		Database db = new Database();
 		db.setConnectionProperties(url, username, password);
 		db.initBSBMDatabase(path);
-		
+
 	}
 
-	private static void startParseToMongoDB(CommandLine commandLine) throws Exception{
+	private static void startParseToMongoDB(CommandLine commandLine) throws Exception {
 		log.info("Start Parse to Mongodb");
 		MySQL mysql = new MySQL();
-		mysql.setConnectionProperties(commandLine.getOptionValue("urlMySQL"), commandLine.getOptionValue("u"),
+		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
-		mysql.getComplexRelation("offer");
-	
-//		mysql.getPrimaryKeyValue(mysql.getKeyPrimaryTable(mysql.getComplexTable().get(0));
-		
+
+
+
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 		NoSQLLoader nosql = new NoSQLLoader();
+		if(commandLine.hasOption("d")){
+			mongo.deleteDatabase();
+		}
 		nosql.setUpdateableDataContext(mongo.getDB());
-		nosql.insertData( mysql.readData());
+		nosql.insertData(mysql.readData());
 		log.info("Done");
 	}
 
 	private static boolean hasMySQLConnectionProperties(CommandLine commandLine) throws Exception {
 		boolean hasProperties = false;
 
-		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql")){
+		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql")) {
 			hasProperties = true;
-		}
-		else{
+		} else {
 			log.error("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
 					+ "For more Inforamtion use -h or --help!");
 		}
-			
 
 		return hasProperties;
 	}
