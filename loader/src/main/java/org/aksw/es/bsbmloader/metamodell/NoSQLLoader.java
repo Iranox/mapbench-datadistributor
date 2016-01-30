@@ -1,15 +1,9 @@
 package org.aksw.es.bsbmloader.metamodell;
 
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 
-import org.aksw.es.bsbmloader.tabledata.TableDataPrimary;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
@@ -17,11 +11,9 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
-import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
-import org.apache.metamodel.update.Update;
 
 /**
  * @author Tobias
@@ -30,95 +22,99 @@ public class NoSQLLoader {
 	private UpdateableDataContext dc;
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
 
-	/**
-	 * Grober Entwurf. Muss überarbeitet werden.
-	 */
-	public void insertComplexData(HashMap<String, ArrayList<Row>> readRows, Table[] tables, String fkColumn,
-			Column column) {
-		for (Table table : tables) {
-			if (readRows.get(table.getName()) != null) {
-				Update update = new Update(table);
-				for (Row row : readRows.get(table.getName())) {
-					dc.executeUpdate(
-							update.where(table.getPrimaryKeys()[0]).eq(fkColumn).value(fkColumn, row.getValue(column)));
+	public void deleteDatabase() {
+		dc.executeUpdate(new UpdateScript() {
+
+			public void run(UpdateCallback callback) {
+				Schema schema = dc.getSchemaByName("bsbm");
+				for (Table table : schema.getTables()) {
+					if (!table.getName().contains("system")) {
+						callback.dropTable(table).execute();
+					}
+
 				}
 
 			}
-		}
-
+		});
 	}
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dc = dc;
 	}
 
-	public void insertData(ArrayList<TableDataPrimary> tableData) throws Exception {
+	public void createTable(Table table, Column[] column) {
 		dc.executeUpdate(new UpdateScript() {
-			private ArrayList<TableDataPrimary> tableData;
-			private Schema defaultSchema;
+			private Table table;
+			private Column[] column;
 
 			public void run(UpdateCallback callback) {
 				log.info("Create Schema");
-				for (TableDataPrimary tableDataprim : tableData) {
-					TableCreationBuilder tableCreation = callback.createTable(defaultSchema,
-							tableDataprim.getTable().getName());
-					for (Column column : tableDataprim.getTable().getColumns()) {
-						tableCreation.withColumn(column.getName());
-					}
-					tableCreation.execute();
+				TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(), table.getName());
+				for (Column columnTable : column) {
+					tableCreation.withColumn(columnTable.getName());
 				}
-				log.info("Create Schema -- Done");
-
-				log.info("Insert into NoSQL Database");
-
-				for (TableDataPrimary tableDataprim : tableData) {
-					RowInsertionBuilder rows = callback.insertInto(tableDataprim.getTable().getName());
-					for (Row row : tableDataprim.getRows()) {
-						for (Column column : tableDataprim.getTable().getColumns()) {
-							String fk = tableDataprim.getRelationshipTable(column.getName());
-							if (fk == null) {
-								Object value;
-								if (column.getType().isTimeBased()) {
-									log.info(row.getValue(column.getColumnNumber()).toString());
-									DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-									Date time = null;
-									try {
-										time = dateFormat.parse(row.getValue(column.getColumnNumber()).toString());
-									}  catch (ParseException e) {
-										 dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-										 try {
-											time = dateFormat.parse(row.getValue(column.getColumnNumber()).toString());
-										} catch (ParseException e1) {
-											log.info("",e);
-										}
-									}
-									value = time;
-								} else {
-									value = row.getValue(column.getColumnNumber());
-								}
-
-								rows.value(column.getName(), value);
-
-							} else {
-								HashMap<String, Row> tmp = tableDataprim.getFKTable(fk).getRows();
-								Row tmpRow = tmp.get(row.getValue(column.getColumnNumber()).toString());
-								rows.value(column.getName(), tmpRow.getValues()[1]);
-
-							}
-						}
-						rows.execute();
-					}
-				}
-				log.info("Insert into NoSQL Database -- Done");
-
+				tableCreation.execute();
 			}
 
-			private UpdateScript init(ArrayList<TableDataPrimary> tableData, Schema defaultSchema) {
-				this.tableData = tableData;
-				this.defaultSchema = defaultSchema;
+			private UpdateScript init(Table table, Column[] column) {
+				this.table = table;
+				this.column = column;
 				return this;
 			}
-		}.init(tableData, dc.getDefaultSchema()));
+
+		}.init(table, column));
+
+	}
+
+	public void insertRows(Table table, Column[] column, ArrayList<Row> rows) {
+		dc.executeUpdate(new UpdateScript() {
+			private Table table;
+			private Column[] columns;
+			private ArrayList<Row> rows = new ArrayList<Row>();
+
+			public void run(UpdateCallback callback) {
+
+				Table tables = dc.getTableByQualifiedLabel(table.getName());
+
+				RowInsertionBuilder rowsInsert = callback.insertInto(tables);
+				for (Row insertRow : rows) {
+					for (Column columnInsert : columns) {
+						Object value = null;
+						if (columnInsert.getType().isTimeBased()) {
+							value = getDate(insertRow.getValue(columnInsert));
+						} else {
+							value = insertRow.getValue(columnInsert);
+						}
+						rowsInsert.value(columnInsert.getName(), value);
+
+					}
+					rowsInsert.execute();
+
+				}
+
+			}
+
+			private UpdateScript init(Table table, Column[] column, ArrayList<Row> rows) {
+				this.columns = column;
+				this.table = table;
+				this.rows = rows;
+				return this;
+			}
+
+		}.init(table, column, rows));
+	}
+
+	private java.util.Date getDate(Object obj) {
+		Date time = null;
+		if (obj instanceof java.sql.Date) {
+			time = new Date(((java.sql.Date) obj).getTime());
+		}
+
+		if (obj instanceof java.sql.Timestamp) {
+			time = new Date(((Timestamp) obj).getTime());
+		}
+
+		return time;
 	}
 
 }

@@ -14,6 +14,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.data.Row;
+import org.apache.metamodel.schema.Column;
+import org.apache.metamodel.schema.Table;
 import org.apache.commons.cli.CommandLine;
 
 public class Main {
@@ -100,11 +102,18 @@ public class Main {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 		NoSQLLoader nosql = new NoSQLLoader();
-		if(commandLine.hasOption("d")){
-			mongo.deleteDatabase();
-		}
 		nosql.setUpdateableDataContext(mongo.getDB());
-		nosql.insertData(mysql.readData());
+		if(commandLine.hasOption("d")){
+			nosql.deleteDatabase();
+		}
+		for(Table table: mysql.getTableMysql("benchmark")){
+			Column[] column =  mysql.getColumnMysql(table.getName(), "benchmark");
+			nosql.createTable(table,column);
+			nosql.insertRows(table, column, mysql.getRowsMysql(table, "benchmark"));
+		}
+//		nosql.createTable(, column);
+		
+//		nosql.insertData(mysql.readData());
 		log.info("Done");
 	}
 
