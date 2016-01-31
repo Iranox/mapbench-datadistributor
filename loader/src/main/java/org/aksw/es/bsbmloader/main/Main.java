@@ -1,6 +1,5 @@
 package org.aksw.es.bsbmloader.main;
 
-
 import org.aksw.es.bsbmloader.loader.Database;
 import org.aksw.es.bsbmloader.metamodell.MongoConnectionProperties;
 import org.aksw.es.bsbmloader.metamodell.MySQL;
@@ -8,6 +7,7 @@ import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.schema.Column;
@@ -31,7 +31,13 @@ public class Main {
 		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
 		options.addOption("file", true, "Use your BSBM sqlfiles");
 		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
-
+		// nosql.materializeSimpleData("offer", "person", "producer", "nr");
+		options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
+		options.addOption("target", true, "The target table with the forgein key");
+		options.addOption("source", true, "The source table with the primary key");
+		options.addOption("fk", "forgeinKey", true, "The forgein key");
+		options.addOption("pk", "primayKey", true, "The primary key");
+	
 		try {
 			CommandLine commandLine = parser.parse(options, args);
 			if (commandLine.hasOption("h")) {
@@ -60,6 +66,13 @@ public class Main {
 				}
 
 			}
+			
+			if (commandLine.hasOption("materializeMongo")) {
+				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
+					materializeSimpleTable(commandLine);
+
+				}
+			}
 
 			if (commandLine.getArgs() == null) {
 				HelpFormatter formater = new HelpFormatter();
@@ -72,6 +85,25 @@ public class Main {
 			log.error("", e);
 		}
 
+	}
+	
+
+
+	private static void materializeSimpleTable(CommandLine commandLine) throws Exception {
+		if(commandLine.hasOption("target") && commandLine.hasOption("source")){
+			if(commandLine.hasOption("fk") && commandLine.hasOption("fk")){
+				MongoConnectionProperties mongo = new MongoConnectionProperties();
+				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+				NoSQLLoader nosql = new NoSQLLoader();
+				nosql.setUpdateableDataContext(mongo.getDB());
+				nosql.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"), 
+						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
+				
+			}
+			
+		}
+
+	
 	}
 
 	private static void startIntDatabase(String username, String password, String url) throws Exception {
@@ -93,23 +125,20 @@ public class Main {
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
-
-
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 		NoSQLLoader nosql = new NoSQLLoader();
 		nosql.setUpdateableDataContext(mongo.getDB());
-		if(commandLine.hasOption("d")){
+		if (commandLine.hasOption("d")) {
 			nosql.deleteDatabase();
 		}
-		for(Table table: mysql.getTableMysql("benchmark")){
-			Column[] column =  mysql.getColumnMysql(table.getName(), "benchmark");
-			nosql.createTable(table,column);
+
+		for (Table table : mysql.getTableMysql("benchmark")) {
+			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
+			nosql.createTable(table, column);
 			nosql.insertRows(table, column, mysql.getRowsMysql(table, "benchmark"));
 		}
-//		nosql.createTable(, column);
-		
-//		nosql.insertData(mysql.readData());
+
 		log.info("Done");
 	}
 

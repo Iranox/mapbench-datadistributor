@@ -3,17 +3,24 @@ package org.aksw.es.bsbmloader.metamodell;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
+import org.apache.metamodel.create.CreateTable;
 import org.apache.metamodel.create.TableCreationBuilder;
+import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
+import org.apache.metamodel.insert.InsertInto;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
+import org.apache.metamodel.update.Update;
+
 
 /**
  * @author Tobias
@@ -21,6 +28,30 @@ import org.apache.metamodel.schema.Table;
 public class NoSQLLoader {
 	private UpdateableDataContext dc;
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
+	
+	
+	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey){
+		Schema schema = dc.getSchemaByName("bsbm");
+		Column forgeinColumn = schema.getTableByName(target).getColumnByName(forgeinKey); 
+		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
+		Column[] sourceColumns = schema.getTableByName(source).getColumns();
+		Table targetTable = schema.getTableByName(target);
+		Map<String, Object> nestedObj =  new HashMap<String, Object>();
+		DataSet ds = dc.query().from(source).selectAll().execute();
+		while(ds.next()){
+			Object pk = ds.getRow().getValue(primaryColumn);
+			for(Column columns: sourceColumns){
+				nestedObj.put(columns.getName(), ds.getRow().getValue(columns));
+			}
+			dc.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(pk).value(forgeinColumn, nestedObj));
+		}
+		ds.close();
+		
+		
+//		dc.executeUpdate(new CreateTable(schema, tableName));
+	}
+	
+
 
 	public void deleteDatabase() {
 		dc.executeUpdate(new UpdateScript() {
@@ -33,6 +64,7 @@ public class NoSQLLoader {
 					}
 
 				}
+			
 
 			}
 		});
