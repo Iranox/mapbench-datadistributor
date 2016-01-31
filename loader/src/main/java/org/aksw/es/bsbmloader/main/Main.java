@@ -1,8 +1,5 @@
 package org.aksw.es.bsbmloader.main;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.aksw.es.bsbmloader.loader.Database;
 import org.aksw.es.bsbmloader.metamodell.MongoConnectionProperties;
@@ -13,7 +10,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
-import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 import org.apache.commons.cli.CommandLine;

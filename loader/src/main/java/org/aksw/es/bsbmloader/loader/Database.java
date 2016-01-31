@@ -2,7 +2,6 @@ package org.aksw.es.bsbmloader.loader;
 
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 
 
