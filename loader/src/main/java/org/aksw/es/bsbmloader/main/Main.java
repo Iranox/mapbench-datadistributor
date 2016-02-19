@@ -7,6 +7,8 @@ import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.schema.Column;
@@ -25,6 +27,8 @@ public class Main {
 				HelpFormatter formater = new HelpFormatter();
 				formater.printHelp("Parameter", getOption());
 			}
+			
+			
 	
 			if (commandLine.hasOption("importToMysql") && hasMySQLConnectionProperties(commandLine)) {
 				if (!commandLine.hasOption("file")) {
@@ -54,6 +58,13 @@ public class Main {
 	
 				}
 			}
+			
+			if (commandLine.hasOption("materializeMongo") && commandLine.hasOption("join")  ) {
+				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
+					materializeComplexTable(commandLine);
+	
+				}
+			}
 	
 			if (commandLine.getArgs() == null) {
 				HelpFormatter formater = new HelpFormatter();
@@ -80,13 +91,43 @@ public class Main {
 				}else{
 					throw new Exception("Missing parameter databaseName");
 				}
-//				nosql.setUpdateableDataContext(mongo.getDB());
 				nosql.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"), 
 						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
 				
 			}
 			
 		}
+
+	
+	}
+	
+	private static void materializeComplexTable(CommandLine commandLine) throws Exception {
+		if(commandLine.hasOption("join") && commandLine.hasOption("jSource")){
+			    log.info("Dematerialize " + commandLine.getOptionValue("join"));
+				MongoConnectionProperties mongo = new MongoConnectionProperties();
+				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+				NoSQLLoader nosql = new NoSQLLoader();
+				if(commandLine.hasOption("databaseName")){
+					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+					nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+				}else{
+					throw new Exception("Missing parameter databaseName");
+				}
+				
+				String[] jSource = commandLine.getOptionValues("jSource");
+				String[] jForgeinkey = commandLine.getOptionValues("jForgeinkey");
+				String[] jSourcekey = commandLine.getOptionValues("jSourcekey");
+
+				nosql.materializeSimpleData(commandLine.getOptionValue("join"), jSource[0], 
+						jForgeinkey[0], jSourcekey[0]);
+				nosql.materializeSimpleData(commandLine.getOptionValue("join"), jSource[1], 
+						jForgeinkey[1], jSourcekey[1]);
+				
+				log.info("Done");
+				
+			}
+			
+		
 
 	
 	}
@@ -152,7 +193,22 @@ public class Main {
 		options.addOption("source", true, "The source table with the primary key");
 		options.addOption("fk", "forgeinKey", true, "The forgein key");
 		options.addOption("pk", "primayKey", true, "The primary key");
-		
+		options.addOption("join", true, "The join table with the forgein key");
+		OptionBuilder.withLongOpt("jSource");
+		OptionBuilder.withValueSeparator(',');
+		OptionBuilder.withDescription("bla");
+		OptionBuilder.hasArgs(2);
+		options.addOption(OptionBuilder.create());
+		OptionBuilder.withLongOpt("jForgeinkey");
+		OptionBuilder.withValueSeparator(',');
+		OptionBuilder.withDescription("bla");
+		OptionBuilder.hasArgs(2);
+		options.addOption(OptionBuilder.create());
+		OptionBuilder.withLongOpt("jSourcekey");
+		OptionBuilder.withValueSeparator(',');
+		OptionBuilder.withDescription("bla");
+		OptionBuilder.hasArgs(2);
+		options.addOption(OptionBuilder.create());
 		return options;
 		
 	}
