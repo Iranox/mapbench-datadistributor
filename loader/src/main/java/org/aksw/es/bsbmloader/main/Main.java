@@ -15,35 +15,17 @@ import org.apache.commons.cli.CommandLine;
 
 public class Main {
 	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
-
+	
 	public static void main(String[] args) {
 		CommandLineParser parser = new BasicParser();
-		Options options = new Options();
-
-		options.addOption("h", "help", false, "Show help");
-		options.addOption("importToMysql", false, "Start to import the data to MySQL");
-		options.addOption("u", "userMysql", true, "The username in MySQL");
-		options.addOption("p", "passwordMysql", true, "The password in MySQL");
-		options.addOption("urlMysql", true, "The jdbc-url for MySQL. For example: jdbc:mysql://localhost/benchmark");
-		options.addOption("portMongo", true, "The username in MongoDB");
-		options.addOption("hostMongo", true, "the password in MongoDB");
-		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
-		options.addOption("file", true, "Use your BSBM sqlfiles");
-		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
-		// nosql.materializeSimpleData("offer", "person", "producer", "nr");
-		options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
-		options.addOption("target", true, "The target table with the forgein key");
-		options.addOption("source", true, "The source table with the primary key");
-		options.addOption("fk", "forgeinKey", true, "The forgein key");
-		options.addOption("pk", "primayKey", true, "The primary key");
 	
 		try {
-			CommandLine commandLine = parser.parse(options, args);
+			CommandLine commandLine = parser.parse(getOption(), args);
 			if (commandLine.hasOption("h")) {
 				HelpFormatter formater = new HelpFormatter();
-				formater.printHelp("Parameter", options);
+				formater.printHelp("Parameter", getOption());
 			}
-
+	
 			if (commandLine.hasOption("importToMysql") && hasMySQLConnectionProperties(commandLine)) {
 				if (!commandLine.hasOption("file")) {
 					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
@@ -52,41 +34,39 @@ public class Main {
 					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
 							commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("file"));
 				}
-
+	
 			}
-
+	
 			if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
 				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
 					startParseToMongoDB(commandLine);
-
+	
 				} else {
 					log.info("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
 							+ "For more Inforamtion use -h or --help!");
 				}
-
+	
 			}
 			
 			if (commandLine.hasOption("materializeMongo")) {
 				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
 					materializeSimpleTable(commandLine);
-
+	
 				}
 			}
-
+	
 			if (commandLine.getArgs() == null) {
 				HelpFormatter formater = new HelpFormatter();
-				formater.printHelp("Parameter", options);
+				formater.printHelp("Parameter", getOption());
 				log.info("Test");
-
+	
 			}
-
+	
 		} catch (Exception e) {
 			log.error("", e);
 		}
-
-	}
 	
-
+	}
 
 	private static void materializeSimpleTable(CommandLine commandLine) throws Exception {
 		if(commandLine.hasOption("target") && commandLine.hasOption("source")){
@@ -94,7 +74,13 @@ public class Main {
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 				NoSQLLoader nosql = new NoSQLLoader();
-				nosql.setUpdateableDataContext(mongo.getDB());
+				if(commandLine.hasOption("databaseName")){
+					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+					nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+				}else{
+					throw new Exception("Missing parameter databaseName");
+				}
+//				nosql.setUpdateableDataContext(mongo.getDB());
 				nosql.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"), 
 						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
 				
@@ -127,7 +113,13 @@ public class Main {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 		NoSQLLoader nosql = new NoSQLLoader();
-		nosql.setUpdateableDataContext(mongo.getDB());
+		if(commandLine.hasOption("databaseName")){
+			nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+			nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+		}else{
+			throw new Exception("Missing parameter databaseName");
+		}
+		
 		if (commandLine.hasOption("d")) {
 			nosql.deleteDatabase();
 		}
@@ -139,6 +131,30 @@ public class Main {
 		}
 
 		log.info("Done");
+	}
+
+	private static Options getOption(){
+		Options options = new Options();
+	
+		options.addOption("h", "help", false, "Show help");
+		options.addOption("importToMysql", false, "Start to import the data to MySQL");
+		options.addOption("u", "userMysql", true, "The username in MySQL");
+		options.addOption("p", "passwordMysql", true, "The password in MySQL");
+		options.addOption("urlMysql", true, "The jdbc-url for MySQL. For example: jdbc:mysql://localhost/benchmark");
+		options.addOption("portMongo", true, "The username in MongoDB");
+		options.addOption("hostMongo", true, "the password in MongoDB");
+		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
+		options.addOption("file", true, "Use your BSBM sqlfiles");
+		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
+		options.addOption("databaseName", true, "Set the name of the NoSQL database");
+		options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
+		options.addOption("target", true, "The target table with the forgein key");
+		options.addOption("source", true, "The source table with the primary key");
+		options.addOption("fk", "forgeinKey", true, "The forgein key");
+		options.addOption("pk", "primayKey", true, "The primary key");
+		
+		return options;
+		
 	}
 
 	private static boolean hasMySQLConnectionProperties(CommandLine commandLine) throws Exception {

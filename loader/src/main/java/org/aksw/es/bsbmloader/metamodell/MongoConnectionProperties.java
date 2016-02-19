@@ -7,7 +7,6 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 
 public class MongoConnectionProperties extends ConnectionProperties {
-	private DB db;
 	private UpdateableDataContext dc;
 
 	public void setConnectionProperties(String hostname, String port) throws Exception {
@@ -16,10 +15,10 @@ public class MongoConnectionProperties extends ConnectionProperties {
 	}
 	
 
-	public UpdateableDataContext getDB() throws Exception {
+	public UpdateableDataContext getDB(String name) throws Exception {
 		MongoClient mongoClient = new MongoClient(getHostname(), getPort());
-		db = mongoClient.getDB("bsbm");
-		dc = new MongoDbDataContext(db);
+		DB dba = new DB(mongoClient, name);
+		dc = new MongoDbDataContext(dba);
 		return dc;
 	}
 

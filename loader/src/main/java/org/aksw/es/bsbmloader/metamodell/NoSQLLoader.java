@@ -28,10 +28,18 @@ import org.apache.metamodel.update.Update;
 public class NoSQLLoader {
 	private UpdateableDataContext dc;
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
+	private String schemaName;
 	
 	
+	
+	public void setSchemaName(String schemaName) {
+		this.schemaName = schemaName;
+	}
+
+
+
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey){
-		Schema schema = dc.getSchemaByName("bsbm");
+		Schema schema = dc.getSchemaByName(schemaName);
 		Column forgeinColumn = schema.getTableByName(target).getColumnByName(forgeinKey); 
 		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
 		Column[] sourceColumns = schema.getTableByName(source).getColumns();
@@ -59,7 +67,7 @@ public class NoSQLLoader {
 		dc.executeUpdate(new UpdateScript() {
 
 			public void run(UpdateCallback callback) {
-				Schema schema = dc.getSchemaByName("bsbm");
+				Schema schema = dc.getSchemaByName(schemaName);
 				for (Table table : schema.getTables()) {
 					if (!table.getName().contains("system")) {
 						callback.dropTable(table).execute();
