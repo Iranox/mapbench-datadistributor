@@ -38,17 +38,19 @@ public class NoSQLLoader {
 		Table targetTable = schema.getTableByName(target);
 		Map<String, Object> nestedObj =  new HashMap<String, Object>();
 		DataSet ds = dc.query().from(source).selectAll().execute();
+		
 		while(ds.next()){
 			Object pk = ds.getRow().getValue(primaryColumn);
 			for(Column columns: sourceColumns){
-				nestedObj.put(columns.getName(), ds.getRow().getValue(columns));
+				if( ds.getRow().getValue(columns) != null){
+					nestedObj.put(columns.getName(), ds.getRow().getValue(columns));
+				}
 			}
 			dc.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(pk).value(forgeinColumn, nestedObj));
 		}
 		ds.close();
 		
 		
-//		dc.executeUpdate(new CreateTable(schema, tableName));
 	}
 	
 
