@@ -1,5 +1,7 @@
 package org.aksw.es.bsbmloader.main;
 
+import java.util.ArrayList;
+
 import org.aksw.es.bsbmloader.loader.Database;
 import org.aksw.es.bsbmloader.metamodell.MongoConnectionProperties;
 import org.aksw.es.bsbmloader.metamodell.MySQL;
@@ -7,7 +9,6 @@ import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
@@ -102,8 +103,16 @@ public class Main {
 	}
 	
 	private static void materializeComplexTable(CommandLine commandLine) throws Exception {
-		if(commandLine.hasOption("join") && commandLine.hasOption("jSource")){
-			    log.info("Dematerialize " + commandLine.getOptionValue("join"));
+//		options.addOption("source", true, "The source table with the primary key");
+//		options.addOption("fk", "forgeinKey", true, "The forgein key");
+//		options.addOption("pk", "primayKey", true, "The primary key");
+//		options.addOption("join", true, "The join table with the forgein key");
+//		options.addOption("fkJoinTable",true,"The forgeinkey of the join table");
+//		options.addOption("secondSource", true,"The secound source table");
+//		options.addOption("pkSecond", true, "The primary key of the second table");
+//		options.addOption("secondFkey",true, "The second key of the join table");
+		if(commandLine.hasOption("join") && commandLine.hasOption("join")){
+			    log.info("Dematerialize " + commandLine.getOptionValue("source") + " in " +commandLine.getOptionValue("source")  + "_mat" );
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
 				NoSQLLoader nosql = new NoSQLLoader();
@@ -114,15 +123,12 @@ public class Main {
 					throw new Exception("Missing parameter databaseName");
 				}
 				
-				String[] jSource = commandLine.getOptionValues("jSource");
-				String[] jForgeinkey = commandLine.getOptionValues("jForgeinkey");
-				String[] jSourcekey = commandLine.getOptionValues("jSourcekey");
+//	nosql.materializeComplexData(database, sourceTable, fkJoinTable, joinTable, secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
+				nosql.materializeComplexData(commandLine.getOptionValue("databaseName"), commandLine.getOptionValue("source"),
+						                     commandLine.getOptionValue("fk"), commandLine.getOptionValue("join"), 
+						                     commandLine.getOptionValue("secondSource"), commandLine.getOptionValue("pkSecond"), 
+						                     commandLine.getOptionValue("pk"), commandLine.getOptionValue("secondFkey"));;
 
-				nosql.materializeSimpleData(commandLine.getOptionValue("join"), jSource[0], 
-						jForgeinkey[0], jSourcekey[0]);
-				nosql.materializeSimpleData(commandLine.getOptionValue("join"), jSource[1], 
-						jForgeinkey[1], jSourcekey[1]);
-				
 				log.info("Done");
 				
 			}
@@ -167,7 +173,8 @@ public class Main {
 
 		for (Table table : mysql.getTableMysql("benchmark")) {
 			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
-			nosql.createTable(table, column);
+			ArrayList<String> fkColumn = mysql.getFkTable(table.getName(),"benchmark");
+			nosql.createTable(table, column,fkColumn);
 			nosql.insertRows(table, column, mysql.getRowsMysql(table, "benchmark"));
 		}
 
@@ -194,21 +201,13 @@ public class Main {
 		options.addOption("fk", "forgeinKey", true, "The forgein key");
 		options.addOption("pk", "primayKey", true, "The primary key");
 		options.addOption("join", true, "The join table with the forgein key");
-		OptionBuilder.withLongOpt("jSource");
-		OptionBuilder.withValueSeparator(',');
-		OptionBuilder.withDescription("bla");
-		OptionBuilder.hasArgs(2);
-		options.addOption(OptionBuilder.create());
-		OptionBuilder.withLongOpt("jForgeinkey");
-		OptionBuilder.withValueSeparator(',');
-		OptionBuilder.withDescription("bla");
-		OptionBuilder.hasArgs(2);
-		options.addOption(OptionBuilder.create());
-		OptionBuilder.withLongOpt("jSourcekey");
-		OptionBuilder.withValueSeparator(',');
-		OptionBuilder.withDescription("bla");
-		OptionBuilder.hasArgs(2);
-		options.addOption(OptionBuilder.create());
+//		nosql.materializeComplexData(database, sourceTable, fkJoinTable, 
+//        joinTable, secondSourceTable, 
+//        pkSecondSource, pkFirstSource, secondFkey);
+		options.addOption("fkJoinTable",true,"The forgeinkey of the join table");
+		options.addOption("secondSource", true,"The secound source table");
+		options.addOption("pkSecond", true, "The primary key of the second table");
+		options.addOption("secondFkey",true, "The second key of the join table");
 		return options;
 		
 	}

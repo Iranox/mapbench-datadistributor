@@ -19,4 +19,4 @@ Important: The database in the jdbc muss exist.
 
 ## demateriazile n:m
 
-``-materializeMongo -join productfeatureproduct -jSource product,productfeature -jForgeinkey product,productFeature -jSourcekey nr,nr -hostMongo localhost -portMongo 27017 -databaseName bsbm``
+``-materializeMongo -hostMongo localhost -portMongo 27017 -databaseName bsbm -source product -fk productFeature -join productfeatureproduct -secondSource productfeature -pkSecond nr -pk nr -secondFkey product``
