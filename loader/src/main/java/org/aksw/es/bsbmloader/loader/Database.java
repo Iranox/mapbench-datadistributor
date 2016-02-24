@@ -13,6 +13,7 @@ import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 public class Database {
 	private SimpleDriverDataSource datasource;
@@ -40,7 +41,6 @@ public class Database {
 		populator.addScript(new ClassPathResource("dataset/08Offer.sql"));
 		populator.addScript(new ClassPathResource("dataset/09Person.sql"));
 		populator.addScript(new ClassPathResource("dataset/10Review.sql"));
-		populator.addScript(new ClassPathResource("dataset/key.sql"));
 
 		try {
 			connection = DataSourceUtils.getConnection(datasource);
@@ -55,6 +55,7 @@ public class Database {
 	
 	public void initBSBMDatabase(String path) throws Exception {
 		log.info("Start Import Data!");	
+
 		
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "01ProductFeature.sql"));
@@ -67,7 +68,7 @@ public class Database {
 		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "08Offer.sql"));
 		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "09Person.sql"));
 		populator.addScript(new FileSystemResourceLoader().getResource("/" + path + "10Review.sql"));
-		populator.addScript(new ClassPathResource("dataset/key.sql"));
+
 
 		try {
 			connection = DataSourceUtils.getConnection(datasource);

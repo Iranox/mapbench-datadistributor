@@ -3,6 +3,7 @@ package org.aksw.es.bsbmloader.main;
 import java.util.ArrayList;
 
 import org.aksw.es.bsbmloader.loader.Database;
+import org.aksw.es.bsbmloader.metamodell.CouchConnectionProperties;
 import org.aksw.es.bsbmloader.metamodell.MongoConnectionProperties;
 import org.aksw.es.bsbmloader.metamodell.MySQL;
 import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
@@ -43,25 +44,32 @@ public class Main {
 			}
 	
 			if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
-				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
+				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					startParseToMongoDB(commandLine);
 	
-				} else {
-					log.info("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
-							+ "For more Inforamtion use -h or --help!");
-				}
+				} 
 	
 			}
 			
+			
+			if (commandLine.hasOption("parseToCouch") && hasMySQLConnectionProperties(commandLine)) {
+				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+					startParseToCouchDB(commandLine);
+	
+				} 
+	
+			}
+			
+			
 			if (commandLine.hasOption("materializeMongo")) {
-				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
+				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					materializeSimpleTable(commandLine);
 	
 				}
 			}
 			
 			if (commandLine.hasOption("materializeMongo") && commandLine.hasOption("join")  ) {
-				if (commandLine.hasOption("hostMongo") && commandLine.hasOption("portMongo")) {
+				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					materializeComplexTable(commandLine);
 	
 				}
@@ -84,7 +92,7 @@ public class Main {
 		if(commandLine.hasOption("target") && commandLine.hasOption("source")){
 			if(commandLine.hasOption("fk") && commandLine.hasOption("fk")){
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
-				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
 				NoSQLLoader nosql = new NoSQLLoader();
 				if(commandLine.hasOption("databaseName")){
 					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
@@ -103,18 +111,10 @@ public class Main {
 	}
 	
 	private static void materializeComplexTable(CommandLine commandLine) throws Exception {
-//		options.addOption("source", true, "The source table with the primary key");
-//		options.addOption("fk", "forgeinKey", true, "The forgein key");
-//		options.addOption("pk", "primayKey", true, "The primary key");
-//		options.addOption("join", true, "The join table with the forgein key");
-//		options.addOption("fkJoinTable",true,"The forgeinkey of the join table");
-//		options.addOption("secondSource", true,"The secound source table");
-//		options.addOption("pkSecond", true, "The primary key of the second table");
-//		options.addOption("secondFkey",true, "The second key of the join table");
 		if(commandLine.hasOption("join") && commandLine.hasOption("join")){
 			    log.info("Dematerialize " + commandLine.getOptionValue("source") + " in " +commandLine.getOptionValue("source")  + "_mat" );
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
-				mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
 				NoSQLLoader nosql = new NoSQLLoader();
 				if(commandLine.hasOption("databaseName")){
 					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
@@ -158,10 +158,40 @@ public class Main {
 				commandLine.getOptionValue("p"));
 
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
-		mongo.setConnectionProperties(commandLine.getOptionValue("hostMongo"), commandLine.getOptionValue("portMongo"));
+		mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
 		NoSQLLoader nosql = new NoSQLLoader();
 		if(commandLine.hasOption("databaseName")){
 			nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+			nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+		}else{
+			throw new Exception("Missing parameter databaseName");
+		}
+		
+		if (commandLine.hasOption("d")) {
+			nosql.deleteDatabase();
+		}
+
+		for (Table table : mysql.getTableMysql("benchmark")) {
+			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
+			ArrayList<String> fkColumn = mysql.getFkTable(table.getName(),"benchmark");
+			nosql.createTable(table, column,fkColumn);
+			nosql.insertRows(table, column, mysql.getRowsMysql(table, "benchmark"));
+		}
+
+		log.info("Done");
+	}
+	
+	private static void startParseToCouchDB(CommandLine commandLine) throws Exception {
+		log.info("Start Parse to Mongodb");
+		MySQL mysql = new MySQL();
+		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
+				commandLine.getOptionValue("p"));
+
+		CouchConnectionProperties couch = new CouchConnectionProperties();
+		couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
+		NoSQLLoader nosql = new NoSQLLoader();
+		if(commandLine.hasOption("databaseName")){
+			nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"), commandLine.getOptionValue("passwordCouch")));
 			nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
 		}else{
 			throw new Exception("Missing parameter databaseName");
@@ -189,8 +219,8 @@ public class Main {
 		options.addOption("u", "userMysql", true, "The username in MySQL");
 		options.addOption("p", "passwordMysql", true, "The password in MySQL");
 		options.addOption("urlMysql", true, "The jdbc-url for MySQL. For example: jdbc:mysql://localhost/benchmark");
-		options.addOption("portMongo", true, "The username in MongoDB");
-		options.addOption("hostMongo", true, "the password in MongoDB");
+		options.addOption("portNosql", true, "The username in MongoDB");
+		options.addOption("hostNosql", true, "the password in MongoDB");
 		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
 		options.addOption("file", true, "Use your BSBM sqlfiles");
 		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
@@ -201,13 +231,13 @@ public class Main {
 		options.addOption("fk", "forgeinKey", true, "The forgein key");
 		options.addOption("pk", "primayKey", true, "The primary key");
 		options.addOption("join", true, "The join table with the forgein key");
-//		nosql.materializeComplexData(database, sourceTable, fkJoinTable, 
-//        joinTable, secondSourceTable, 
-//        pkSecondSource, pkFirstSource, secondFkey);
+		options.addOption("parseToCouch",false,"Import the mysql databaste to couchdb");
 		options.addOption("fkJoinTable",true,"The forgeinkey of the join table");
 		options.addOption("secondSource", true,"The secound source table");
 		options.addOption("pkSecond", true, "The primary key of the second table");
 		options.addOption("secondFkey",true, "The second key of the join table");
+		options.addOption("passwordCouch",true, "The host for CouchDB");
+		options.addOption("userCouch",true, "The host for CouchDB");
 		return options;
 		
 	}

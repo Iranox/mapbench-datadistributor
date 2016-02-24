@@ -63,6 +63,7 @@ public class NoSQLLoader implements Runnable {
 				}
 			}
 			dc.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(pk).value(forgeinColumn, nestedObj));
+			log.info("Test");
 		}
 		ds.close();
 
