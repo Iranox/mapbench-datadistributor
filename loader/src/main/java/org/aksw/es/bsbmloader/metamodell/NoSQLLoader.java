@@ -29,11 +29,14 @@ public class NoSQLLoader implements Runnable {
 	private UpdateableDataContext dc;
 	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
 	private String schemaName;
-	protected BlockingQueue queue = null;
+	protected BlockingQueue<Row> queue = null;
+	private Table table;
+	private Column[] column;
 
-
-	public NoSQLLoader(BlockingQueue queue) {
-		super();
+	public void setQueue(BlockingQueue<Row> queue, Table table, Column[] column) {
+		// super();
+		this.table = table;
+		this.column = column;
 		this.queue = queue;
 	}
 
@@ -145,7 +148,6 @@ public class NoSQLLoader implements Runnable {
 				}
 				Table table = dc.getTableByQualifiedLabel(secondSourceTable);
 				Table join = dc.getTableByQualifiedLabel(joinTable);
-			
 
 				rowsInsert.value(forgeinKey,
 						getComplexData(join, table, forgeinKey, pkSecondSource,
@@ -176,7 +178,7 @@ public class NoSQLLoader implements Runnable {
 	private ArrayList<Map<String, Object>> getComplexData(Table joinTable, Table table, String fKey, String jKey,
 			Object id, String secondFkey, String secondSourceTable, String pkSecondSource) {
 		ArrayList<Object> list = new ArrayList<Object>();
-		
+
 		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey).eq(getInteger(id)).execute();
 
 		while (dsJoin.next()) {
@@ -254,6 +256,8 @@ public class NoSQLLoader implements Runnable {
 
 		}.init(table, column, fkColumn));
 
+		
+
 	}
 
 	public void insertRows(Table table, Column[] column, ArrayList<Row> rows) {
@@ -263,6 +267,10 @@ public class NoSQLLoader implements Runnable {
 			private ArrayList<Row> rows = new ArrayList<Row>();
 
 			public void run(UpdateCallback callback) {
+
+				if (dc.getTableByQualifiedLabel(table.getName()) == null) {
+
+				}
 
 				Table tables = dc.getTableByQualifiedLabel(table.getName());
 
@@ -313,6 +321,54 @@ public class NoSQLLoader implements Runnable {
 	}
 
 	public void run() {
+
+		try {
+			Row row;
+			while ((row = queue.take()) != null) {
+				// A Posion Row to kil the thread
+				if (row.size() < 0) {
+					return;
+				}
+
+				if (row.size() > 0) {
+					dc.executeUpdate(new UpdateScript() {
+						private Table table;
+						private Column[] columns;
+						protected Row queue = null;
+
+						public void run(UpdateCallback callback) {
+
+							Table tables = dc.getTableByQualifiedLabel(table.getName());
+							RowInsertionBuilder rowsInsert = callback.insertInto(tables);
+
+							for (Column columnInsert : columns) {
+								Object value = null;
+								if (columnInsert.getType().isTimeBased()) {
+									value = getDate(queue.getValue(columnInsert));
+								} else {
+									value = queue.getValue(columnInsert);
+								}
+								rowsInsert.value(columnInsert.getName(), value);
+
+							}
+							rowsInsert.execute();
+
+						}
+
+						private UpdateScript init(Table table, Column[] column, Row queue) {
+							this.columns = column;
+							this.table = table;
+							this.queue = queue;
+							return this;
+						}
+					}.init(table, column, row));
+				}
+
+			}
+		} catch (InterruptedException e) {
+
+			e.printStackTrace();
+		}
 	}
 
 }

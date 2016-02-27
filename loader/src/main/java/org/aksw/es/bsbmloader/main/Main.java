@@ -1,6 +1,8 @@
 package org.aksw.es.bsbmloader.main;
 
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.aksw.es.bsbmloader.loader.Database;
 import org.aksw.es.bsbmloader.metamodell.CouchConnectionProperties;
@@ -13,6 +15,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
+import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 import org.apache.commons.cli.CommandLine;
@@ -153,12 +156,16 @@ public class Main {
 
 	private static void startParseToMongoDB(CommandLine commandLine) throws Exception {
 		log.info("Start Parse to Mongodb");
-		MySQL mysql = new MySQL();
+		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
+		MySQL mysql = new MySQL(queue);
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
+		
+		
+	
 		NoSQLLoader nosql = new NoSQLLoader();
 		if(commandLine.hasOption("databaseName")){
 			nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
@@ -170,13 +177,23 @@ public class Main {
 		if (commandLine.hasOption("d")) {
 			nosql.deleteDatabase();
 		}
-
 		for (Table table : mysql.getTableMysql("benchmark")) {
 			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
+			mysql.setTable(table);
+			
 			ArrayList<String> fkColumn = mysql.getFkTable(table.getName(),"benchmark");
 			nosql.createTable(table, column,fkColumn);
-			nosql.insertRows(table, column, mysql.getRowsMysql(table, "benchmark"));
+			nosql.setQueue(queue, table, column);
+			Thread test1 = new Thread(mysql);
+			test1.start();
+		new Thread(nosql).start();
+			while(test1.isAlive()){
+				Thread.sleep(1000);
+			}
+			Thread.sleep(1000);
+
 		}
+
 
 		log.info("Done");
 	}

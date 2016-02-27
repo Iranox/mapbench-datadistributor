@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
-import org.aksw.es.bsbmloader.main.Main;
+import org.aksw.es.bsbmloader.loader.PosionRow;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.DataContextFactory;
@@ -30,7 +30,7 @@ public class MySQL implements Runnable{
 	
 	
 	
-	public MySQL(BlockingQueue queue) {
+	public MySQL(BlockingQueue<Row> queue) {
 		this.queue = queue;
 	}
 
@@ -76,6 +76,7 @@ public class MySQL implements Runnable{
 		ArrayList<Row> rows = new ArrayList<Row>();
 		while(ds.next()){
 			rows.add(ds.getRow());
+			Thread.sleep(10);
 		}
 		ds.close();
 		closeConnection();
@@ -92,18 +93,26 @@ public class MySQL implements Runnable{
 	public void run() {
 		try{
 			buildConnection();
-			Schema schema = dc.getSchemaByName(database);
+			Schema schema = dc.getSchemaByName("benchmark");
 			Table tables = schema.getTableByName(table.getName());
-			DataSet ds = dc.query().from(tables).selectAll().execute();	
+			DataSet ds = dc.query().from(tables.getName()).selectAll().execute();	
 			while(ds.next()){
+				if(queue.size() == 1000){
+					Thread.sleep(100);
+				}
 				queue.add(ds.getRow());
 			}
+		  
+			ds.close();
+			queue.add(new PosionRow().getPosion());
+			closeConnection();
 		} catch(Exception e){
 			log.info(e);
 		}
 		
 		
 	}
+
 
 	public void setTable(Table table) {
 		this.table = table;
