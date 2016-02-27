@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.loader;
+package org.aksw.es.bsbmloader.metamodell;
 
 import org.apache.metamodel.data.DataSetHeader;
 import org.apache.metamodel.data.Row;

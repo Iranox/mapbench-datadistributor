@@ -51,6 +51,7 @@ public class NoSQLLoader implements Runnable {
 
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) {
 		Schema schema = dc.getSchemaByName(schemaName);
+		log.info(schema);
 		Column forgeinColumn = schema.getTableByName(target).getColumnByName(forgeinKey);
 		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
 		Column[] sourceColumns = schema.getTableByName(source).getColumns();

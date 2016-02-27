@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
-import org.aksw.es.bsbmloader.loader.PosionRow;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.DataContextFactory;
@@ -97,7 +96,7 @@ public class MySQL implements Runnable{
 			Table tables = schema.getTableByName(table.getName());
 			DataSet ds = dc.query().from(tables.getName()).selectAll().execute();	
 			while(ds.next()){
-				if(queue.size() == 1000){
+				if(queue.size() == 900){
 					Thread.sleep(100);
 				}
 				queue.add(ds.getRow());
