@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.metamodell;
+package org.aksw.es.bsbmloader.parser;
 
 import org.apache.metamodel.data.DataSetHeader;
 import org.apache.metamodel.data.Row;
@@ -11,6 +11,11 @@ public class PosionRow {
 	public Row getPosion(){
 		  Row posion = new Row() {
 				
+				/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 				public int size() {
 					// TODO Auto-generated method stub
 					return -2;

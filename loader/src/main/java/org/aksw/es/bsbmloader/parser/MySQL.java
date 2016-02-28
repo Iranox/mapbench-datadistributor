@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.metamodell;
+package org.aksw.es.bsbmloader.parser;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,10 +23,7 @@ public class MySQL implements Runnable{
 	private DataContext dc;
 	protected BlockingQueue<Row> queue = null;
 	private Table table; 
-	private String database;
 	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
-	
-	
 	
 	
 	public MySQL(BlockingQueue<Row> queue) {
@@ -67,21 +64,7 @@ public class MySQL implements Runnable{
 		return forgeinTable;
 	}
 	
-	public ArrayList<Row> getRowsMysql(Table table, String database) throws Exception{
-		buildConnection();
-		Schema schema = dc.getSchemaByName(database);
-		Table tables = schema.getTableByName(table.getName());
-		DataSet ds = dc.query().from(tables).selectAll().execute();
-		ArrayList<Row> rows = new ArrayList<Row>();
-		while(ds.next()){
-			rows.add(ds.getRow());
-			Thread.sleep(10);
-		}
-		ds.close();
-		closeConnection();
-		return rows;
-		
-	}
+
 
 	public void setConnectionProperties(String jdbcUrl, String username, String password) throws Exception {
 		this.jdbcUrl = jdbcUrl;
@@ -96,8 +79,8 @@ public class MySQL implements Runnable{
 			Table tables = schema.getTableByName(table.getName());
 			DataSet ds = dc.query().from(tables.getName()).selectAll().execute();	
 			while(ds.next()){
-				if(queue.size() == 900){
-					Thread.sleep(100);
+				while(queue.size() == 1000){
+					Thread.sleep(10);
 				}
 				queue.add(ds.getRow());
 			}
@@ -115,10 +98,6 @@ public class MySQL implements Runnable{
 
 	public void setTable(Table table) {
 		this.table = table;
-	}
-
-	public void setDatabase(String database) {
-		this.database = database;
 	}
 
 	private void closeConnection() throws Exception {

@@ -1,12 +1,11 @@
-package org.aksw.es.bsbmloader.metamodell;
+package org.aksw.es.bsbmloader.loader;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.aksw.es.bsbmloader.parser.ElementParser;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
@@ -17,24 +16,17 @@ import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
-import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 import org.apache.metamodel.update.Update;
 
 public class CouchLoader {
 	private UpdateableDataContext dc;
-	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
-	
-	
-	
+	private static org.apache.log4j.Logger log = Logger.getLogger(MongoLoader.class);
 
-	
-
-	
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) {
 		Column forgeinColumn = dc.getTableByQualifiedLabel(target).getColumnByName(forgeinKey);
 		log.info(forgeinColumn.getName());
-        Column primaryColumn = dc.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
+		Column primaryColumn = dc.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
 		Column[] sourceColumns = dc.getTableByQualifiedLabel(source).getColumns();
 		Table targetTable = dc.getTableByQualifiedLabel(target);
 		Map<String, Object> nestedObj = new HashMap<String, Object>();
@@ -59,18 +51,16 @@ public class CouchLoader {
 		Table tables = dc.getTableByQualifiedLabel(sourceTable + "_mat");
 		if (tables == null) {
 			/**
-			 * Create Table productfeatureproduct_mat
-			 * TODO Auslagern
+			 * Create Table productfeatureproduct_mat TODO Auslagern
 			 **/
 			dc.executeUpdate(new UpdateScript() {
 				private String sourceTable;
-				private String database;
 				private String fkJoinTable;
 
 				public void run(UpdateCallback callback) {
 					TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(),
 							sourceTable + "_mat");
-					
+
 					tableCreation.withColumn(fkJoinTable);
 
 					for (Column column : dc.getTableByQualifiedLabel(sourceTable).getColumns()) {
@@ -81,13 +71,12 @@ public class CouchLoader {
 
 				}
 
-				private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
+				private UpdateScript init(String sourceTable, String fkJoinTable) {
 					this.sourceTable = sourceTable;
-					this.database = database;
 					this.fkJoinTable = fkJoinTable;
 					return this;
 				}
-			}.init(sourceTable, database, fkJoinTable));
+			}.init(sourceTable, fkJoinTable));
 
 			/**
 			 * Insert Rows
@@ -161,7 +150,8 @@ public class CouchLoader {
 			Object id, String secondFkey, String secondSourceTable, String pkSecondSource) {
 		ArrayList<Object> list = new ArrayList<Object>();
 
-		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey).eq(getInteger(id)).execute();
+		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey)
+				.eq(new ElementParser().getInteger(id)).execute();
 
 		while (dsJoin.next()) {
 			for (SelectItem column : dsJoin.getSelectItems()) {
@@ -173,7 +163,7 @@ public class CouchLoader {
 		Iterator<Object> liter = list.iterator();
 		ArrayList<Map<String, Object>> test = new ArrayList<Map<String, Object>>();
 		while (liter.hasNext()) {
-			int i = getInteger(liter.next());
+			int i = new ElementParser().getInteger(liter.next());
 
 			DataSet dsTable = dc.query().from(secondSourceTable).selectAll().where(pkSecondSource).eq(i).execute();
 			while (dsTable.next()) {
@@ -188,58 +178,21 @@ public class CouchLoader {
 		return test;
 	}
 
-	/**public void deleteDatabase() {
-		dc.executeUpdate(new UpdateScript() {
-
-			public void run(UpdateCallback callback) {
-				Schema schema = dc.getSchemaByName(schemaName);
-				for (Table table : schema.getTables()) {
-					if (!table.getName().contains("system")) {
-						callback.dropTable(table).execute();
-					}
-
-				}
-
-			}
-		});
-	} **/
+	/**
+	 * public void deleteDatabase() { dc.executeUpdate(new UpdateScript() {
+	 * 
+	 * public void run(UpdateCallback callback) { Schema schema =
+	 * dc.getSchemaByName(schemaName); for (Table table : schema.getTables()) {
+	 * if (!table.getName().contains("system")) {
+	 * callback.dropTable(table).execute(); }
+	 * 
+	 * }
+	 * 
+	 * } }); }
+	 **/
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dc = dc;
-	}
-
-	public void createTable(Table table, Column[] column, ArrayList<String> fkColumn) {
-		dc.executeUpdate(new UpdateScript() {
-			private Table table;
-			private Column[] column;
-			ArrayList<String> fkColumn = new ArrayList<String>();
-
-			public void run(UpdateCallback callback) {
-				log.info("Create Schema");
-				TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(), table.getName());
-				for (Column columnTable : column) {
-					tableCreation.withColumn(columnTable.getName());
-				}
-				if (fkColumn != null) {
-					for (String column : fkColumn) {
-						tableCreation.withColumn(column);
-					}
-				}
-
-				tableCreation.execute();
-			}
-
-			private UpdateScript init(Table table, Column[] column, ArrayList<String> fkColumn) {
-				this.table = table;
-				this.column = column;
-				this.fkColumn = fkColumn;
-				return this;
-			}
-
-		}.init(table, column, fkColumn));
-
-		
-
 	}
 
 	public void insertRows(Table table, Column[] column, ArrayList<Row> rows) {
@@ -261,7 +214,7 @@ public class CouchLoader {
 					for (Column columnInsert : columns) {
 						Object value = null;
 						if (columnInsert.getType().isTimeBased()) {
-							value = getDate(insertRow.getValue(columnInsert));
+							value = new ElementParser().getDate(insertRow.getValue(columnInsert));
 						} else {
 							value = insertRow.getValue(columnInsert);
 						}
@@ -284,23 +237,4 @@ public class CouchLoader {
 		}.init(table, column, rows));
 	}
 
-	private java.util.Date getDate(Object obj) {
-		Date time = null;
-		if (obj instanceof java.sql.Date) {
-			time = new Date(((java.sql.Date) obj).getTime());
-		}
-
-		if (obj instanceof java.sql.Timestamp) {
-			time = new Date(((Timestamp) obj).getTime());
-		}
-
-		return time;
-	}
-
-	private int getInteger(Object obj) {
-		int i = java.lang.Integer.parseInt(obj.toString());
-		return i;
-	}
-
-	
 }

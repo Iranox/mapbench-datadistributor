@@ -1,13 +1,12 @@
-package org.aksw.es.bsbmloader.metamodell;
+package org.aksw.es.bsbmloader.loader;
 
-import java.sql.Timestamp;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.aksw.es.bsbmloader.parser.ElementParser;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
@@ -25,24 +24,14 @@ import org.apache.metamodel.update.Update;
 /**
  * @author Tobias
  */
-public class NoSQLLoader implements Runnable {
+public class MongoLoader  {
 	private UpdateableDataContext dc;
-	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLLoader.class);
+	private static org.apache.log4j.Logger log = Logger.getLogger(MongoLoader.class);
 	private String schemaName;
-	protected BlockingQueue<Row> queue = null;
-	private Table table;
-	private Column[] column;
 
-	public void setQueue(BlockingQueue<Row> queue, Table table, Column[] column) {
-		// super();
-		this.table = table;
-		this.column = column;
-		this.queue = queue;
-	}
 
-	public NoSQLLoader() {
+	public MongoLoader() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public void setSchemaName(String schemaName) {
@@ -180,7 +169,7 @@ public class NoSQLLoader implements Runnable {
 			Object id, String secondFkey, String secondSourceTable, String pkSecondSource) {
 		ArrayList<Object> list = new ArrayList<Object>();
 
-		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey).eq(getInteger(id)).execute();
+		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey).eq(new ElementParser().getInteger(id)).execute();
 
 		while (dsJoin.next()) {
 			for (SelectItem column : dsJoin.getSelectItems()) {
@@ -192,7 +181,7 @@ public class NoSQLLoader implements Runnable {
 		Iterator<Object> liter = list.iterator();
 		ArrayList<Map<String, Object>> test = new ArrayList<Map<String, Object>>();
 		while (liter.hasNext()) {
-			int i = getInteger(liter.next());
+			int i = new ElementParser().getInteger(liter.next());
 
 			DataSet dsTable = dc.query().from(secondSourceTable).selectAll().where(pkSecondSource).eq(i).execute();
 			while (dsTable.next()) {
@@ -227,149 +216,11 @@ public class NoSQLLoader implements Runnable {
 		this.dc = dc;
 	}
 
-	public void createTable(Table table, Column[] column, ArrayList<String> fkColumn) {
-		dc.executeUpdate(new UpdateScript() {
-			private Table table;
-			private Column[] column;
-			ArrayList<String> fkColumn = new ArrayList<String>();
 
-			public void run(UpdateCallback callback) {
-				log.info("Create Schema");
-				TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(), table.getName());
-				for (Column columnTable : column) {
-					tableCreation.withColumn(columnTable.getName());
-				}
-				if (fkColumn != null) {
-					for (String column : fkColumn) {
-						tableCreation.withColumn(column);
-					}
-				}
+	
 
-				tableCreation.execute();
-			}
+	
 
-			private UpdateScript init(Table table, Column[] column, ArrayList<String> fkColumn) {
-				this.table = table;
-				this.column = column;
-				this.fkColumn = fkColumn;
-				return this;
-			}
-
-		}.init(table, column, fkColumn));
-
-		
-
-	}
-
-	public void insertRows(Table table, Column[] column, ArrayList<Row> rows) {
-		dc.executeUpdate(new UpdateScript() {
-			private Table table;
-			private Column[] columns;
-			private ArrayList<Row> rows = new ArrayList<Row>();
-
-			public void run(UpdateCallback callback) {
-
-				if (dc.getTableByQualifiedLabel(table.getName()) == null) {
-
-				}
-
-				Table tables = dc.getTableByQualifiedLabel(table.getName());
-
-				RowInsertionBuilder rowsInsert = callback.insertInto(tables);
-				for (Row insertRow : rows) {
-					for (Column columnInsert : columns) {
-						Object value = null;
-						if (columnInsert.getType().isTimeBased()) {
-							value = getDate(insertRow.getValue(columnInsert));
-						} else {
-							value = insertRow.getValue(columnInsert);
-						}
-						rowsInsert.value(columnInsert.getName(), value);
-
-					}
-					rowsInsert.execute();
-
-				}
-
-			}
-
-			private UpdateScript init(Table table, Column[] column, ArrayList<Row> rows) {
-				this.columns = column;
-				this.table = table;
-				this.rows = rows;
-				return this;
-			}
-
-		}.init(table, column, rows));
-	}
-
-	private java.util.Date getDate(Object obj) {
-		Date time = null;
-		if (obj instanceof java.sql.Date) {
-			time = new Date(((java.sql.Date) obj).getTime());
-		}
-
-		if (obj instanceof java.sql.Timestamp) {
-			time = new Date(((Timestamp) obj).getTime());
-		}
-
-		return time;
-	}
-
-	private int getInteger(Object obj) {
-		int i = java.lang.Integer.parseInt(obj.toString());
-		return i;
-	}
-
-	public void run() {
-
-		try {
-			Row row;
-			while ((row = queue.take()) != null) {
-				// A Posion Row to kil the thread
-				if (row.size() < 0) {
-					return;
-				}
-
-				if (row.size() > 0) {
-					dc.executeUpdate(new UpdateScript() {
-						private Table table;
-						private Column[] columns;
-						protected Row queue = null;
-
-						public void run(UpdateCallback callback) {
-
-							Table tables = dc.getTableByQualifiedLabel(table.getName());
-							RowInsertionBuilder rowsInsert = callback.insertInto(tables);
-
-							for (Column columnInsert : columns) {
-								Object value = null;
-								if (columnInsert.getType().isTimeBased()) {
-									value = getDate(queue.getValue(columnInsert));
-								} else {
-									value = queue.getValue(columnInsert);
-								}
-								rowsInsert.value(columnInsert.getName(), value);
-
-							}
-							rowsInsert.execute();
-
-						}
-
-						private UpdateScript init(Table table, Column[] column, Row queue) {
-							this.columns = column;
-							this.table = table;
-							this.queue = queue;
-							return this;
-						}
-					}.init(table, column, row));
-				}
-
-			}
-		} catch (InterruptedException e) {
-
-			e.printStackTrace();
-		}
-	}
+	
 
 }

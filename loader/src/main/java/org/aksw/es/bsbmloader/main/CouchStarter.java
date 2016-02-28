@@ -1,8 +1,7 @@
 package org.aksw.es.bsbmloader.main;
 
 import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
-import org.aksw.es.bsbmloader.metamodell.CouchLoader;
-import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
+import org.aksw.es.bsbmloader.loader.CouchLoader;
 import org.apache.commons.cli.CommandLine;
 
 public class CouchStarter {
@@ -16,7 +15,6 @@ public class CouchStarter {
 			if (commandLine.hasOption("databaseName")) {
 				nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 						commandLine.getOptionValue("passwordCouch")));
-//				snosql.setSchemaName(commandLine.getOptionValue("target"));
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}

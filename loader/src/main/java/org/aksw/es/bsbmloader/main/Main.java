@@ -1,14 +1,14 @@
 package org.aksw.es.bsbmloader.main;
 
-import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
+import org.aksw.es.bsbmloader.connectionproperties.ExcelPath;
 import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
-import org.aksw.es.bsbmloader.loader.Database;
-import org.aksw.es.bsbmloader.metamodell.MySQL;
-import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
+import org.aksw.es.bsbmloader.database.Database;
+import org.aksw.es.bsbmloader.parser.MySQL;
+import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -48,10 +48,9 @@ public class Main {
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
 				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					NoSQLLoader nosql = new NoSQLLoader();
+					NoSQLParser nosql = new NoSQLParser();
 					if (commandLine.hasOption("databaseName")) {
 						nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
-						nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
 					} else {
 						throw new Exception("Missing parameter databaseName");
 					}
@@ -66,11 +65,10 @@ public class Main {
 				couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
 				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					NoSQLLoader nosql = new NoSQLLoader();
+					NoSQLParser nosql = new NoSQLParser();
 					if (commandLine.hasOption("databaseName")) {
 						nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 								commandLine.getOptionValue("passwordCouch")));
-						nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
 					} else {
 						throw new Exception("Missing parameter databaseName");
 					}
@@ -80,13 +78,21 @@ public class Main {
 
 			}
 
+			if (commandLine.hasOption("parseToExcel") && hasMySQLConnectionProperties(commandLine)) {
+				ExcelPath excel = new ExcelPath();
+				NoSQLParser nosql = new NoSQLParser();
+				nosql.setUpdateableDataContext(excel.getDB(commandLine.getOptionValue("excelFile")));
+				startParseToNoSQL(commandLine, nosql);
+
+			}
+
 			if (commandLine.hasOption("materializeMongo")) {
 				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					MongoStarter.materializeSimpleTable(commandLine);
 
 				}
 			}
-			
+
 			if (commandLine.hasOption("materializeCouch")) {
 				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					CouchStarter.materializeSimpleTable(commandLine);
@@ -100,7 +106,7 @@ public class Main {
 
 				}
 			}
-			
+
 			if (commandLine.hasOption("materializeCouch") && commandLine.hasOption("join")) {
 				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 					CouchStarter.materializeComplexTable(commandLine);
@@ -134,7 +140,7 @@ public class Main {
 
 	}
 
-	private static void startParseToNoSQL(CommandLine commandLine, NoSQLLoader nosql) throws Exception {
+	private static void startParseToNoSQL(CommandLine commandLine, NoSQLParser nosql) throws Exception {
 		log.info("Start Parse to Mongodb");
 		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
 		MySQL mysql = new MySQL(queue);
@@ -142,24 +148,22 @@ public class Main {
 				commandLine.getOptionValue("p"));
 
 		if (commandLine.hasOption("d")) {
-			nosql.deleteDatabase();
+			// nosql.deleteDatabase();
 		}
 		for (Table table : mysql.getTableMysql("benchmark")) {
 			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
 			mysql.setTable(table);
 
-			ArrayList<String> fkColumn = mysql.getFkTable(table.getName(), "benchmark");
-			nosql.createTable(table, column, fkColumn);
+			nosql.createTable(table, column);
 			nosql.setQueue(queue, table, column);
 			Thread test1 = new Thread(mysql);
 			Thread test2 = new Thread(nosql);
 			test1.start();
 			test2.start();
-//			new Thread(nosql).start();
+
 			while (test1.isAlive() || test2.isAlive()) {
 				Thread.sleep(100);
 			}
-//			Thread.sleep(1000);
 
 		}
 
@@ -193,6 +197,8 @@ public class Main {
 		options.addOption("passwordCouch", true, "The host for CouchDB");
 		options.addOption("userCouch", true, "The host for CouchDB");
 		options.addOption("materializeCouch", false, "Materialize a N to One Relationship in MongoDB");
+		options.addOption("parseToExcel", false, "Import the mysql databaste to Excel");
+		options.addOption("excelFile", true, "Use your BSBM sqlfiles");
 		return options;
 
 	}

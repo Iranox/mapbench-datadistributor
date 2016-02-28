@@ -1,7 +1,7 @@
 package org.aksw.es.bsbmloader.main;
 
 import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
-import org.aksw.es.bsbmloader.metamodell.NoSQLLoader;
+import org.aksw.es.bsbmloader.loader.MongoLoader;
 import org.apache.commons.cli.CommandLine;
 
 public class MongoStarter {
@@ -12,7 +12,7 @@ public class MongoStarter {
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
-				NoSQLLoader nosql = new NoSQLLoader();
+				MongoLoader nosql = new MongoLoader();
 				if (commandLine.hasOption("databaseName")) {
 					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
 					nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
@@ -32,7 +32,7 @@ public class MongoStarter {
 			MongoConnectionProperties mongo = new MongoConnectionProperties();
 			mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			NoSQLLoader nosql = new NoSQLLoader();
+			MongoLoader nosql = new MongoLoader();
 			if (commandLine.hasOption("databaseName")) {
 				nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
 				nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
