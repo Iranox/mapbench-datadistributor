@@ -1,6 +1,6 @@
 package org.aksw.es.bsbmloader.test.loader;
 
-import org.aksw.es.bsbmloader.loader.Database;
+import org.aksw.es.bsbmloader.database.Database;
 
 import junit.framework.TestCase;
 

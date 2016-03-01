@@ -79,7 +79,7 @@ public class MySQL implements Runnable{
 			Table tables = schema.getTableByName(table.getName());
 			DataSet ds = dc.query().from(tables.getName()).selectAll().execute();	
 			while(ds.next()){
-				while(queue.size() == 1000){
+				while(queue.size() == 900){
 					Thread.sleep(10);
 				}
 				queue.add(ds.getRow());

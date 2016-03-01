@@ -46,4 +46,15 @@ To get a value
 The excel file must exist.  
 ``-parseToExcel -u root -p password -urlMysql jdbc:mysql://localhost/benchmark -excelFile  C:\Users\username\Desktop\Test.xlsx``
 
-At the moment bsbmloader does not support demateriazile an excel file.
+At the moment, bsbmloader does not support demateriazile an excel file.
+
+## ElasticSearch
+### parte to ElasticSearch   
+
+``-parseToElastic -u root -p password -urlMysql jdbc:mysql://localhost/benchmark -hostNosql localhost -portNosql 27017 -databaseName bsbm``
+
+### Get 1000 rows 
+http://127.0.0.1:9200/bla/_search/?size=1000&pretty=1
+
+
+

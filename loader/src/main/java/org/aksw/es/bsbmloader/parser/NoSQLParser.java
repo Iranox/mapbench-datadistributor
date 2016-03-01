@@ -23,6 +23,14 @@ public class NoSQLParser implements Runnable {
 		this.column = column;
 		this.queue = queue;
 	}
+	
+	
+
+	public UpdateableDataContext getDc() {
+		return dc;
+	}
+
+
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dc = dc;
@@ -85,6 +93,7 @@ public class NoSQLParser implements Runnable {
 
 							}
 							rowsInsert.execute();
+							
 
 						}
 
