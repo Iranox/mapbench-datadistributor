@@ -20,50 +20,49 @@ import org.apache.metamodel.schema.Table;
 import org.apache.metamodel.update.Update;
 
 public class CouchLoader {
-	private UpdateableDataContext dc;
+	private UpdateableDataContext dataContext;
 	private static org.apache.log4j.Logger log = Logger.getLogger(MongoLoader.class);
 
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) {
-		Column forgeinColumn = dc.getTableByQualifiedLabel(target).getColumnByName(forgeinKey);
-		log.info(forgeinColumn.getName());
-		Column primaryColumn = dc.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
-		Column[] sourceColumns = dc.getTableByQualifiedLabel(source).getColumns();
-		Table targetTable = dc.getTableByQualifiedLabel(target);
+		Column forgeinColumn = dataContext.getTableByQualifiedLabel(target).getColumnByName(forgeinKey);
+		Column primaryColumn = dataContext.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
+		Column[] sourceColumns = dataContext.getTableByQualifiedLabel(source).getColumns();
+		Table targetTable = dataContext.getTableByQualifiedLabel(target);
 		Map<String, Object> nestedObj = new HashMap<String, Object>();
-		DataSet ds = dc.query().from(source).selectAll().execute();
+		DataSet dataSet = dataContext.query().from(source).selectAll().execute();
 
-		while (ds.next()) {
-			Object pk = ds.getRow().getValue(primaryColumn);
+		while (dataSet.next()) {
+			Object pk = dataSet.getRow().getValue(primaryColumn);
 			for (Column columns : sourceColumns) {
-				if (ds.getRow().getValue(columns) != null) {
-					nestedObj.put(columns.getName(), ds.getRow().getValue(columns));
+				if (dataSet.getRow().getValue(columns) != null) {
+					nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
 				}
 			}
-			dc.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(pk).value(forgeinColumn, nestedObj));
+			dataContext.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(pk).value(forgeinColumn, nestedObj));
 			log.info("Test");
 		}
-		ds.close();
+		dataSet.close();
 
 	}
 
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
-		Table tables = dc.getTableByQualifiedLabel(sourceTable + "_mat");
+		Table tables = dataContext.getTableByQualifiedLabel(sourceTable + "_mat");
 		if (tables == null) {
 			/**
 			 * Create Table productfeatureproduct_mat TODO Auslagern
 			 **/
-			dc.executeUpdate(new UpdateScript() {
+			dataContext.executeUpdate(new UpdateScript() {
 				private String sourceTable;
 				private String fkJoinTable;
 
 				public void run(UpdateCallback callback) {
-					TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(),
+					TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
 							sourceTable + "_mat");
 
 					tableCreation.withColumn(fkJoinTable);
 
-					for (Column column : dc.getTableByQualifiedLabel(sourceTable).getColumns()) {
+					for (Column column : dataContext.getTableByQualifiedLabel(sourceTable).getColumns()) {
 						tableCreation.withColumn(column.getName());
 					}
 
@@ -82,23 +81,23 @@ public class CouchLoader {
 			 * Insert Rows
 			 */
 
-			tables = dc.getTableByQualifiedLabel(sourceTable);
-			DataSet ds = dc.query().from(tables).selectAll().execute(); // get
+			tables = dataContext.getTableByQualifiedLabel(sourceTable);
+			DataSet dataSet = dataContext.query().from(tables).selectAll().execute(); // get
 																		// all
 																		// Product
 																		// Data
-			while (ds.next()) {
+			while (dataSet.next()) {
 
-				insertRows(tables, tables.getColumns(), ds.getRow(), fkJoinTable, secondSourceTable, joinTable,
+				insertRows(tables, tables.getColumns(), dataSet.getRow(), fkJoinTable, secondSourceTable, joinTable,
 						pkSecondSource, pkFirstSource, secondFkey);
 			}
-			ds.close();
+			dataSet.close();
 		}
 	}
 
 	private void insertRows(Table table, Column[] column, Row row, String forgeinKey, String secondSourceTable,
 			String joinTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
-		dc.executeUpdate(new UpdateScript() {
+		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
 			private Column[] column;
 			private Row row;
@@ -110,15 +109,15 @@ public class CouchLoader {
 			private String secondFkey;
 
 			public void run(UpdateCallback callback) {
-				Table tables = dc.getTableByQualifiedLabel(table.getName());
-				Table matTable = dc.getTableByQualifiedLabel(table.getName() + "_mat");
+				Table tables = dataContext.getTableByQualifiedLabel(table.getName());
+				Table matTable = dataContext.getTableByQualifiedLabel(table.getName() + "_mat");
 				RowInsertionBuilder rowsInsert = callback.insertInto(matTable);
 				for (Column columnInsert : column) {
 					rowsInsert.value(columnInsert.getName(), row.getValue(columnInsert.getColumnNumber()));
 
 				}
-				Table table = dc.getTableByQualifiedLabel(secondSourceTable);
-				Table join = dc.getTableByQualifiedLabel(joinTable);
+				Table table = dataContext.getTableByQualifiedLabel(secondSourceTable);
+				Table join = dataContext.getTableByQualifiedLabel(joinTable);
 
 				rowsInsert.value(forgeinKey,
 						getComplexData(join, table, forgeinKey, pkSecondSource,
@@ -148,34 +147,35 @@ public class CouchLoader {
 
 	private ArrayList<Map<String, Object>> getComplexData(Table joinTable, Table table, String fKey, String jKey,
 			Object id, String secondFkey, String secondSourceTable, String pkSecondSource) {
-		ArrayList<Object> list = new ArrayList<Object>();
+		ArrayList<Object> listRow = new ArrayList<Object>();
 
-		DataSet dsJoin = dc.query().from(joinTable).select(fKey).where(secondFkey)
+		DataSet dataSetJoin = dataContext.query().from(joinTable).select(fKey).where(secondFkey)
 				.eq(new ElementParser().getInteger(id)).execute();
 
-		while (dsJoin.next()) {
-			for (SelectItem column : dsJoin.getSelectItems()) {
-				list.add(dsJoin.getRow().getValue(column));
+		while (dataSetJoin.next()) {
+			for (SelectItem column : dataSetJoin.getSelectItems()) {
+				listRow.add(dataSetJoin.getRow().getValue(column));
 			}
 		}
 
-		dsJoin.close();
-		Iterator<Object> liter = list.iterator();
-		ArrayList<Map<String, Object>> test = new ArrayList<Map<String, Object>>();
+		dataSetJoin.close();
+		Iterator<Object> liter = listRow.iterator();
+		ArrayList<Map<String, Object>> complexData = new ArrayList<Map<String, Object>>();
 		while (liter.hasNext()) {
-			int i = new ElementParser().getInteger(liter.next());
+			int index = new ElementParser().getInteger(liter.next());
 
-			DataSet dsTable = dc.query().from(secondSourceTable).selectAll().where(pkSecondSource).eq(i).execute();
-			while (dsTable.next()) {
+			DataSet dataSetTable = dataContext.query().from(secondSourceTable).selectAll().where(pkSecondSource).eq(index).execute();
+			while (dataSetTable.next()) {
 				Map<String, Object> nestedObj = new HashMap<String, Object>();
-				for (SelectItem column : dsTable.getSelectItems()) {
-					nestedObj.put(column.getColumn().getName(), dsTable.getRow().getValue(column));
+				for (SelectItem column : dataSetTable.getSelectItems()) {
+					nestedObj.put(column.getColumn().getName(), dataSetTable.getRow().getValue(column));
 				}
-				test.add(nestedObj);
+				complexData.add(nestedObj);
 			}
+			dataSetTable.close();
 		}
 
-		return test;
+		return complexData;
 	}
 
 	/**
@@ -192,22 +192,22 @@ public class CouchLoader {
 	 **/
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
-		this.dc = dc;
+		this.dataContext = dc;
 	}
 
 	public void insertRows(Table table, Column[] column, ArrayList<Row> rows) {
-		dc.executeUpdate(new UpdateScript() {
+		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
 			private Column[] columns;
 			private ArrayList<Row> rows = new ArrayList<Row>();
 
 			public void run(UpdateCallback callback) {
 
-				if (dc.getTableByQualifiedLabel(table.getName()) == null) {
+				if (dataContext.getTableByQualifiedLabel(table.getName()) == null) {
 
 				}
 
-				Table tables = dc.getTableByQualifiedLabel(table.getName());
+				Table tables = dataContext.getTableByQualifiedLabel(table.getName());
 
 				RowInsertionBuilder rowsInsert = callback.insertInto(tables);
 				for (Row insertRow : rows) {

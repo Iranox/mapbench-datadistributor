@@ -6,13 +6,12 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.excel.ExcelDataContext;
 
 public class ExcelPath {
-	private UpdateableDataContext dc;
 	  
 	  
 	  public UpdateableDataContext getDB(String path){
 		  final File srcFile = new File(path);
-		  dc = new ExcelDataContext(srcFile);
-		  return dc;	 
+		  UpdateableDataContext  dataContext = new ExcelDataContext(srcFile);
+		  return dataContext;	 
 	  }
 
 }

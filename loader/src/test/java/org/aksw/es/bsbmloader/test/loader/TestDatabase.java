@@ -1,12 +1,12 @@
 package org.aksw.es.bsbmloader.test.loader;
 
-import org.aksw.es.bsbmloader.database.Database;
+import org.aksw.es.bsbmloader.database.DatabaseBuilder;
 
 import junit.framework.TestCase;
 
 public class TestDatabase extends TestCase {
 	public void testSetDatasource(){
-		Database data = new Database();
+		DatabaseBuilder data = new DatabaseBuilder();
 		data.setConnectionProperties("jdbc:mysql://localhost/benchmark", "root", "password");
 		assertNotNull(data.getDatasource());
 		assertEquals("test", data.getDatasource().getUrl());
@@ -16,7 +16,7 @@ public class TestDatabase extends TestCase {
 	}
 	
 	public void testSetConnection(){
-		Database data = new Database();
+		DatabaseBuilder data = new DatabaseBuilder();
 		data.setConnectionProperties("jdbc:mysql://localhost/benchmark", "root", "password");
 		data.setConnection(data.getDatasource());
 		assertNotNull(data.getConnection());

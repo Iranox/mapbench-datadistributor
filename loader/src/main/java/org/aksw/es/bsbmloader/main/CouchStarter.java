@@ -11,14 +11,14 @@ public class CouchStarter {
 			CouchConnectionProperties couch = new CouchConnectionProperties();
 			couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			CouchLoader nosql = new CouchLoader();
+			CouchLoader couchLoader = new CouchLoader();
 			if (commandLine.hasOption("databaseName")) {
-				nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
+				couchLoader.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 						commandLine.getOptionValue("passwordCouch")));
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}
-			nosql.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
+			couchLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
 					commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
 
 		}
@@ -30,16 +30,16 @@ public class CouchStarter {
 			CouchConnectionProperties couch = new CouchConnectionProperties();
 			couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			CouchLoader nosql = new CouchLoader();
+			CouchLoader couchLoader = new CouchLoader();
 			if (commandLine.hasOption("databaseName")) {
-				nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
+				couchLoader.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 						commandLine.getOptionValue("passwordCouch")));
 				
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}
 
-			nosql.materializeComplexData(commandLine.getOptionValue("databaseName"),
+			couchLoader.materializeComplexData(commandLine.getOptionValue("databaseName"),
 					commandLine.getOptionValue("source"), commandLine.getOptionValue("fk"),
 					commandLine.getOptionValue("join"), commandLine.getOptionValue("secondSource"),
 					commandLine.getOptionValue("pkSecond"), commandLine.getOptionValue("pk"),

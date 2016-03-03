@@ -16,7 +16,7 @@ public class NoSQLParser implements Runnable {
 	protected BlockingQueue<Row> queue = null;
 	private Table table;
 	private Column[] column;
-	private UpdateableDataContext dc;
+	private UpdateableDataContext dataContext;
 
 	public void setQueue(BlockingQueue<Row> queue, Table table, Column[] column) {
 		this.table = table;
@@ -27,22 +27,21 @@ public class NoSQLParser implements Runnable {
 	
 
 	public UpdateableDataContext getDc() {
-		return dc;
+		return dataContext;
 	}
-
 
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
-		this.dc = dc;
+		this.dataContext = dc;
 	}
 
 	public void createTable(Table table, Column[] column) {
-		dc.executeUpdate(new UpdateScript() {
+		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
 			private Column[] column;
 
 			public void run(UpdateCallback callback) {
-				TableCreationBuilder tableCreation = callback.createTable(dc.getDefaultSchema(), table.getName());
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
 				for (Column columnTable : column) {
 					tableCreation.withColumn(columnTable.getName());
 				}
@@ -66,20 +65,20 @@ public class NoSQLParser implements Runnable {
 		try {
 			Row row;
 			while ((row = queue.take()) != null) {
-				// A Posion Row to kil the thread
+				// A Posion Row to kill the thread
 				if (row.size() < 0) {
 					return;
 				}
 
 				if (row.size() > 0) {
-					dc.executeUpdate(new UpdateScript() {
+					dataContext.executeUpdate(new UpdateScript() {
 						private Table table;
 						private Column[] columns;
 						protected Row queue = null;
 
 						public void run(UpdateCallback callback) {
 
-							Table tables = dc.getTableByQualifiedLabel(table.getName());
+							Table tables = dataContext.getTableByQualifiedLabel(table.getName());
 							RowInsertionBuilder rowsInsert = callback.insertInto(tables);
 
 							for (Column columnInsert : columns) {

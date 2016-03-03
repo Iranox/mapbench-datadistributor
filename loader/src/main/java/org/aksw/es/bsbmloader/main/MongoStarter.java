@@ -12,14 +12,14 @@ public class MongoStarter {
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
-				MongoLoader nosql = new MongoLoader();
+				MongoLoader mongoLoader = new MongoLoader();
 				if (commandLine.hasOption("databaseName")) {
-					nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
-					nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+					mongoLoader.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+					mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
 				} else {
 					throw new Exception("Missing parameter databaseName");
 				}
-				nosql.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
+				mongoLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
 						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
 
 			}
@@ -32,15 +32,15 @@ public class MongoStarter {
 			MongoConnectionProperties mongo = new MongoConnectionProperties();
 			mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			MongoLoader nosql = new MongoLoader();
+			MongoLoader mongoLoader = new MongoLoader();
 			if (commandLine.hasOption("databaseName")) {
-				nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
-				nosql.setSchemaName(commandLine.getOptionValue("databaseName"));
+				mongoLoader.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+				mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}
 
-			nosql.materializeComplexData(commandLine.getOptionValue("databaseName"),
+			mongoLoader.materializeComplexData(commandLine.getOptionValue("databaseName"),
 					commandLine.getOptionValue("source"), commandLine.getOptionValue("fk"),
 					commandLine.getOptionValue("join"), commandLine.getOptionValue("secondSource"),
 					commandLine.getOptionValue("pkSecond"), commandLine.getOptionValue("pk"),

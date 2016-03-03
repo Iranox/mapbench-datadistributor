@@ -20,7 +20,7 @@ public class MySQL implements Runnable{
 	private String jdbcUrl;
 	private String username;
 	private String password;
-	private DataContext dc;
+	private DataContext dataContext;
 	protected BlockingQueue<Row> queue = null;
 	private Table table; 
 	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
@@ -36,7 +36,7 @@ public class MySQL implements Runnable{
 
 	public Table[] getTableMysql(String database) throws Exception{
 		buildConnection();
-		Schema schema = dc.getSchemaByName(database);
+		Schema schema = dataContext.getSchemaByName(database);
 		Table[] tables = schema.getTables();
 		closeConnection();
 		return tables;
@@ -44,7 +44,7 @@ public class MySQL implements Runnable{
 	
 	public Column[] getColumnMysql(String table, String database) throws Exception{
 		buildConnection();
-		Schema schema = dc.getSchemaByName(database);
+		Schema schema = dataContext.getSchemaByName(database);
 		Table tableMySql = schema.getTableByName(table);
 		Column[] columns = tableMySql.getColumns();
 		closeConnection();
@@ -55,7 +55,7 @@ public class MySQL implements Runnable{
 	public ArrayList<String> getFkTable(String table, String database) throws Exception{
 		buildConnection();
 		 ArrayList<String> forgeinTable = new ArrayList<String>();
-		Schema schema = dc.getSchemaByName(database);	
+		Schema schema = dataContext.getSchemaByName(database);	
 		Table tableMySql = schema.getTableByName(table);
 		for(Relationship relation : tableMySql.getPrimaryKeyRelationships()){
 			forgeinTable.add(relation.getForeignTable().getName());
@@ -75,17 +75,17 @@ public class MySQL implements Runnable{
 	public void run() {
 		try{
 			buildConnection();
-			Schema schema = dc.getSchemaByName("benchmark");
+			Schema schema = dataContext.getSchemaByName("benchmark");
 			Table tables = schema.getTableByName(table.getName());
-			DataSet ds = dc.query().from(tables.getName()).selectAll().execute();	
-			while(ds.next()){
+			DataSet dataSet = dataContext.query().from(tables.getName()).selectAll().execute();	
+			while(dataSet.next()){
 				while(queue.size() == 900){
 					Thread.sleep(10);
 				}
-				queue.add(ds.getRow());
+				queue.add(dataSet.getRow());
 			}
 		  
-			ds.close();
+			dataSet.close();
 			queue.add(new PosionRow().getPosion());
 			closeConnection();
 		} catch(Exception e){
@@ -107,10 +107,9 @@ public class MySQL implements Runnable{
 	}
 
 	private void buildConnection() throws Exception {
-	
 		Class.forName("com.mysql.jdbc.Driver");
 		connection = DriverManager.getConnection(jdbcUrl, username, password);
-		dc = DataContextFactory.createJdbcDataContext(connection);
+		dataContext = DataContextFactory.createJdbcDataContext(connection);
 	
 	}
 

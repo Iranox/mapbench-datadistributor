@@ -7,15 +7,14 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
 public class ElasticLoader {
-private UpdateableDataContext dc;
+private UpdateableDataContext dataContext;
 	
-	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
-		this.dc = dc;
+	public void setUpdateableDataContext(UpdateableDataContext dataContext) throws Exception {
+		this.dataContext = dataContext;
 	}
 	
 	public void createTable(Table table, Column[] column) {
-		System.out.println(dc);
-		final CreateTable createTable = new CreateTable(dc.getDefaultSchema(),table.getName());
+		final CreateTable createTable = new CreateTable(dataContext.getDefaultSchema(),table.getName());
 		for(Column columnTable : column){
 			if(columnTable.getName() == "nr"){
 				createTable.withColumn(columnTable.getName()).ofType(columnTable.getType()).asPrimaryKey();
@@ -26,7 +25,7 @@ private UpdateableDataContext dc;
 			
 		}
 		
-		dc.executeUpdate(createTable);
+		dataContext.executeUpdate(createTable);
 	}
 
 }

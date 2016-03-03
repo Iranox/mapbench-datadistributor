@@ -7,7 +7,7 @@ import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
 import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
 import org.aksw.es.bsbmloader.connectionproperties.ExcelPath;
 import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
-import org.aksw.es.bsbmloader.database.Database;
+import org.aksw.es.bsbmloader.database.DatabaseBuilder;
 import org.aksw.es.bsbmloader.loader.ElasticLoader;
 import org.aksw.es.bsbmloader.parser.MySQL;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
@@ -61,6 +61,7 @@ public class Main {
 				}
 
 			}
+//			commandLine.getO
 
 			if (commandLine.hasOption("parseToCouch") && hasMySQLConnectionProperties(commandLine)) {
 				CouchConnectionProperties couch = new CouchConnectionProperties();
@@ -89,17 +90,21 @@ public class Main {
 			}
 			
 			if (commandLine.hasOption("parseToElastic") && hasMySQLConnectionProperties(commandLine)) {
-				ElasticConnectionProperties couch = new ElasticConnectionProperties();
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+				ElasticConnectionProperties elastic = new ElasticConnectionProperties();
+				if (commandLine.hasOption("hostNosql")) {
 					NoSQLParser nosql = new NoSQLParser();
+					elastic.setConnectionProperties(commandLine.getOptionValue("hostNosql"));
 					if (commandLine.hasOption("databaseName")) {
-						log.info(couch.getDB(commandLine.getOptionValue("databaseName")));
-						nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("databaseName")));
+						log.info(elastic.getDB(commandLine.getOptionValue("databaseName")));
+						nosql.setUpdateableDataContext(elastic.getDB(commandLine.getOptionValue("databaseName")));
 					} else {
 						throw new Exception("Missing parameter databaseName");
 					}
 					startParseToNoSQL(commandLine, nosql);
 
+				}
+				else{
+					throw new Exception("Missing parameter hostNosql");
 				}
 
 			}
@@ -146,20 +151,20 @@ public class Main {
 	}
 
 	private static void startIntDatabase(String username, String password, String url) throws Exception {
-		Database db = new Database();
+		DatabaseBuilder db = new DatabaseBuilder();
 		db.setConnectionProperties(url, username, password);
 		db.initBSBMDatabase();
 	}
 
 	private static void startIntDatabase(String username, String password, String url, String path) throws Exception {
-		Database db = new Database();
+		DatabaseBuilder db = new DatabaseBuilder();
 		db.setConnectionProperties(url, username, password);
 		db.initBSBMDatabase(path);
 
 	}
 
 	private static void startParseToNoSQL(CommandLine commandLine, NoSQLParser nosql) throws Exception {
-		log.info("Start Parse to Mongodb");
+		log.info("Start Parse to NoSQL");
 		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
 		MySQL mysql = new MySQL(queue);
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
@@ -235,8 +240,7 @@ public class Main {
 		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql")) {
 			hasProperties = true;
 		} else {
-			log.error("The programm need username, password and jdbc-url for the mysqlServer! \n\t"
-					+ "For more Inforamtion use -h or --help!");
+			throw new Exception("Missing parameter");
 		}
 
 		return hasProperties;

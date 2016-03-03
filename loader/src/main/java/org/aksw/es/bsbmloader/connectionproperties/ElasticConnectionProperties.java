@@ -14,12 +14,12 @@ public class ElasticConnectionProperties extends ConnectionProperties {
 		setHostname(hostname);
 	}
 
-	// TODO Config host and port
+	
 	public UpdateableDataContext getDB(String indexName) throws Exception {
 		TransportClient client = new TransportClient();
 		client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(getHostname()), 9300));
-		UpdateableDataContext dc = new ElasticSearchDataContext((Client) client, indexName);
-		return dc;
+		UpdateableDataContext dataContext = new ElasticSearchDataContext((Client) client, indexName);
+		return dataContext;
 
 	}
 
