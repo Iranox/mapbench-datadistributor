@@ -1,6 +1,10 @@
 package org.aksw.es.bsbmloader.parser;
 
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
@@ -20,19 +24,24 @@ public class MySQL implements Runnable{
 	private String jdbcUrl;
 	private String username;
 	private String password;
+	private String database;
 	private DataContext dataContext;
 	protected BlockingQueue<Row> queue = null;
 	private Table table; 
 	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
-	
 	
 	public MySQL(BlockingQueue<Row> queue) {
 		this.queue = queue;
 	}
 
 	public MySQL() {
-	
 	}
+	
+	public void setDatabase(String database){
+		this.database = database;
+	}
+	
+
 
 	public Table[] getTableMysql(String database) throws Exception{
 		buildConnection();
@@ -75,7 +84,7 @@ public class MySQL implements Runnable{
 	public void run() {
 		try{
 			buildConnection();
-			Schema schema = dataContext.getSchemaByName("benchmark");
+			Schema schema = dataContext.getSchemaByName(database);
 			Table tables = schema.getTableByName(table.getName());
 			DataSet dataSet = dataContext.query().from(tables.getName()).selectAll().execute();	
 			while(dataSet.next()){
@@ -104,11 +113,42 @@ public class MySQL implements Runnable{
 	}
 
 	private void buildConnection() throws Exception {
-		Class.forName("com.mysql.jdbc.Driver");
+		getFile(jdbcUrl);
+		URL u = new URL("file:"+  getFile(jdbcUrl));
+		String classname = getClassName(jdbcUrl);
+		URLClassLoader ucl = new URLClassLoader(new URL[] { u });
+		Driver d = (Driver)Class.forName(classname, true, ucl).newInstance();
+		DriverManager.registerDriver(new DriverLoader(d));
 		connection = DriverManager.getConnection(jdbcUrl, username, password);
 		dataContext = DataContextFactory.createJdbcDataContext(connection);
 	
 	}
+	
+    private String getClassName(String jdbc){
+    	
+    	if(jdbc.contains("mysql")){
+    		return "com.mysql.jdbc.Driver";
+    	}
+    	
+    	if(jdbc.contains("postgresql")){
+    		return "org.postgresql.Driver";
+    	}
+    	
+    	
+		return null;
+	}
+    
+    private String getFile(String jdbc){
+    	String[] db = jdbc.split(":");
+    	File[] files = new File("src/lib").listFiles();
+    	for (File file : files) {
+    	    if (file.isFile() && file.getName().contains(db[1])) {
+//    	    	System.out.println(file.getAbsolutePath());
+    	        return file.getAbsolutePath();
+    	    }
+    	}
+    	return null;
+    }
 
 	
 

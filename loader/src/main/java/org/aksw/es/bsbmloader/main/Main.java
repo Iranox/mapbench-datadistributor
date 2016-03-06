@@ -3,14 +3,12 @@ package org.aksw.es.bsbmloader.main;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
-import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
-import org.aksw.es.bsbmloader.connectionproperties.ExcelPath;
-import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
+
 import org.aksw.es.bsbmloader.database.DatabaseBuilder;
-import org.aksw.es.bsbmloader.loader.ElasticLoader;
 import org.aksw.es.bsbmloader.parser.MySQL;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
+import org.aksw.es.bsbmloader.starter.Starter;
+import org.aksw.es.bsbmloader.starter.StarterFactory;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -29,6 +27,13 @@ public class Main {
 
 		try {
 			CommandLine commandLine = parser.parse(getOption(), args);
+			
+			if (commandLine.getArgs() == null) {
+				HelpFormatter formater = new HelpFormatter();
+				formater.printHelp("Parameter", getOption());
+
+			}
+			
 			if (commandLine.hasOption("h")) {
 				HelpFormatter formater = new HelpFormatter();
 				formater.printHelp("Parameter", getOption());
@@ -45,109 +50,69 @@ public class Main {
 
 			}
 
-			if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
-				MongoConnectionProperties mongo = new MongoConnectionProperties();
-				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
-						commandLine.getOptionValue("portNosql"));
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					NoSQLParser nosql = new NoSQLParser();
-					if (commandLine.hasOption("databaseName")) {
-						nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
-					} else {
-						throw new Exception("Missing parameter databaseName");
-					}
-					startParseToNoSQL(commandLine, nosql);
+			interpretCommandLine(commandLine);
 
-				}
-
-			}
-//			commandLine.getO
-
-			if (commandLine.hasOption("parseToCouch") && hasMySQLConnectionProperties(commandLine)) {
-				CouchConnectionProperties couch = new CouchConnectionProperties();
-				couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
-						commandLine.getOptionValue("portNosql"));
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					NoSQLParser nosql = new NoSQLParser();
-					if (commandLine.hasOption("databaseName")) {
-						nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
-								commandLine.getOptionValue("passwordCouch")));
-					} else {
-						throw new Exception("Missing parameter databaseName");
-					}
-					startParseToNoSQL(commandLine, nosql);
-
-				}
-
-			}
-
-			if (commandLine.hasOption("parseToExcel") && hasMySQLConnectionProperties(commandLine)) {
-				ExcelPath excel = new ExcelPath();
-				NoSQLParser nosql = new NoSQLParser();
-				nosql.setUpdateableDataContext(excel.getDB(commandLine.getOptionValue("excelFile")));
-				startParseToNoSQL(commandLine, nosql);
-
-			}
 			
-			if (commandLine.hasOption("parseToElastic") && hasMySQLConnectionProperties(commandLine)) {
-				ElasticConnectionProperties elastic = new ElasticConnectionProperties();
-				if (commandLine.hasOption("hostNosql")) {
-					NoSQLParser nosql = new NoSQLParser();
-					elastic.setConnectionProperties(commandLine.getOptionValue("hostNosql"));
-					if (commandLine.hasOption("databaseName")) {
-						log.info(elastic.getDB(commandLine.getOptionValue("databaseName")));
-						nosql.setUpdateableDataContext(elastic.getDB(commandLine.getOptionValue("databaseName")));
-					} else {
-						throw new Exception("Missing parameter databaseName");
-					}
-					startParseToNoSQL(commandLine, nosql);
-
-				}
-				else{
-					throw new Exception("Missing parameter hostNosql");
-				}
-
-			}
-
-			if (commandLine.hasOption("materializeMongo")) {
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					MongoStarter.materializeSimpleTable(commandLine);
-
-				}
-			}
-
-			if (commandLine.hasOption("materializeCouch")) {
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					CouchStarter.materializeSimpleTable(commandLine);
-
-				}
-			}
-
-			if (commandLine.hasOption("materializeMongo") && commandLine.hasOption("join")) {
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					MongoStarter.materializeComplexTable(commandLine);
-
-				}
-			}
-
-			if (commandLine.hasOption("materializeCouch") && commandLine.hasOption("join")) {
-				if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-					CouchStarter.materializeComplexTable(commandLine);
-
-				}
-			}
-
-			if (commandLine.getArgs() == null) {
-				HelpFormatter formater = new HelpFormatter();
-				formater.printHelp("Parameter", getOption());
-				log.info("Test");
-
-			}
 
 		} catch (Exception e) {
 			log.error("", e);
 		}
 
+	}
+	
+	private static void interpretCommandLine(CommandLine commandLine) throws Exception{
+		Starter starter = new StarterFactory().getStarter(commandLine);
+
+		if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
+			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
+		}
+
+		if (commandLine.hasOption("parseToCouch") && hasMySQLConnectionProperties(commandLine)) {
+			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
+		}
+
+		if (commandLine.hasOption("parseToExcel") && hasMySQLConnectionProperties(commandLine)) {
+			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
+		}
+
+		if (commandLine.hasOption("parseToElastic") && hasMySQLConnectionProperties(commandLine)) {
+			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
+		}
+
+		if (commandLine.hasOption("materializeMongo")) {
+			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+				log.info("start materializeMongo");
+				starter.startMaterializeSimple(commandLine);
+				log.info("Done");
+
+			}
+		}
+
+		if (commandLine.hasOption("materializeCouch")) {
+			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+				log.info("start materializeCouch");
+				starter.startMaterializeSimple(commandLine);
+				log.info("Done");
+
+			}
+		}
+
+		if (commandLine.hasOption("materializeMongo") && commandLine.hasOption("join")) {
+			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+				log.info("start materializeMongo");
+				starter.startMaterializeComplex(commandLine);
+
+			}
+		}
+
+		if (commandLine.hasOption("materializeCouch") && commandLine.hasOption("join")) {
+			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+				log.info("start materializeCouch");
+				starter.startMaterializeComplex(commandLine);
+				log.info("Done");
+
+			}
+		}
 	}
 
 	private static void startIntDatabase(String username, String password, String url) throws Exception {
@@ -165,26 +130,25 @@ public class Main {
 
 	private static void startParseToNoSQL(CommandLine commandLine, NoSQLParser nosql) throws Exception {
 		log.info("Start Parse to NoSQL");
+		System.out.println(nosql);
+		String[] sqldatabase = commandLine.getOptionValue("urlMysql").split("/");
 		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
 		MySQL mysql = new MySQL(queue);
+		if(!commandLine.hasOption("jdbc") ){
+			throw new Exception("Missing parameter jdbc");
+		}
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
 		if (commandLine.hasOption("d")) {
 			// nosql.deleteDatabase();
 		}
-		for (Table table : mysql.getTableMysql("benchmark")) {
-			Column[] column = mysql.getColumnMysql(table.getName(), "benchmark");
+		for (Table table : mysql.getTableMysql(sqldatabase[sqldatabase.length -1 ])) {
+			Column[] column = mysql.getColumnMysql(table.getName(), sqldatabase[sqldatabase.length -1 ]);
 			mysql.setTable(table);
-			if(!commandLine.hasOption("parseToElastic")){
-				nosql.createTable(table, column);
-			}else{
-				ElasticLoader elastic = new ElasticLoader();
-				elastic.setUpdateableDataContext(nosql.getDc());
-				elastic.createTable(table, column);
-			}
+			mysql.setDatabase(sqldatabase[sqldatabase.length -1 ]);
+			nosql.createTable(table, column);
 
-			
 			nosql.setQueue(queue, table, column);
 			Thread test1 = new Thread(mysql);
 			Thread test2 = new Thread(nosql);

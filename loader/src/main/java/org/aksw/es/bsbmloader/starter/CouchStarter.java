@@ -1,11 +1,13 @@
-package org.aksw.es.bsbmloader.main;
+package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
 import org.aksw.es.bsbmloader.loader.CouchLoader;
+import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
-public class CouchStarter {
-	public static void materializeSimpleTable(CommandLine commandLine) throws Exception {
+public class CouchStarter implements Starter{
+	
+	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source") && commandLine.hasOption("fk")
 				&& commandLine.hasOption("fk")) {
 			CouchConnectionProperties couch = new CouchConnectionProperties();
@@ -25,7 +27,7 @@ public class CouchStarter {
 
 	}
 
-	public static void materializeComplexTable(CommandLine commandLine) throws Exception {
+	public  void startMaterializeComplex(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("join")) {
 			CouchConnectionProperties couch = new CouchConnectionProperties();
 			couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
@@ -48,6 +50,25 @@ public class CouchStarter {
 
 		}
 
+	}
+
+
+
+
+	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
+		NoSQLParser nosql = new NoSQLParser();
+		CouchConnectionProperties couch = new CouchConnectionProperties();
+		couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
+				commandLine.getOptionValue("portNosql"));
+		if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
+			if (commandLine.hasOption("databaseName")) {
+				nosql.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
+						commandLine.getOptionValue("passwordCouch")));
+			} else {
+				throw new Exception("Missing parameter databaseName");
+			}
+		}
+		return nosql;
 	}
 
 }

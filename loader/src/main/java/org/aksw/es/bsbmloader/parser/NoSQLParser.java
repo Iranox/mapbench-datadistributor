@@ -43,7 +43,7 @@ public class NoSQLParser implements Runnable {
 			public void run(UpdateCallback callback) {
 				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
 				for (Column columnTable : column) {
-					tableCreation.withColumn(columnTable.getName());
+					tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
 				}
 
 				tableCreation.execute();

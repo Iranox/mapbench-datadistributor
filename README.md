@@ -14,6 +14,7 @@ Important: The database in the jdbc muss exist.
 ``-parseToMongo -u root -p password  -urlMysql jdbc:mysql://localhost/benchmark -hostMongo localhost -portMongo 27017 -databaseName bsbm -d``  
 
   Without -d the database will still exist.
+  Support MySQl and Postgre. Load the driver into the lib folder.
 
 ### demateriazile n:1
 
@@ -25,7 +26,8 @@ Important: The database in the jdbc muss exist.
 
 ## CouchDB
 ### parse to CouchDB
-``-parseToMongo -u root -p password  -urlMysql jdbc:mysql://localhost/benchmark -hostMongo localhost -portMongo 27017 -databaseName bsbm``
+``-parseToMongo -u root -p password  -urlMysql jdbc:mysql://localhost/benchmark -hostNosql localhost -portMongo 27017 -databaseName bsbm``
+  Support MySQl and Postgre. Load the driver into the lib folder.
 
 ### demateriazile n:1
 
