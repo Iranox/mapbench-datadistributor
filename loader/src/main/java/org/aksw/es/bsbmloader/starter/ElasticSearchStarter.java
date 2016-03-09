@@ -1,6 +1,7 @@
 package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
+import org.aksw.es.bsbmloader.loader.MongoLoader;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
@@ -12,7 +13,23 @@ public class ElasticSearchStarter implements Starter{
 	}
 
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
-		// TODO Auto-generated method stub
+		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
+			if (commandLine.hasOption("fk") && commandLine.hasOption("fk")) {
+				ElasticConnectionProperties elastic = new ElasticConnectionProperties();
+				elastic.setConnectionProperties(commandLine.getOptionValue("hostNosql"));
+				MongoLoader nosqlLoader = new MongoLoader();
+				if (commandLine.hasOption("databaseName")) {
+					nosqlLoader.setUpdateableDataContext(elastic.getDB(commandLine.getOptionValue("databaseName")));
+					nosqlLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
+				} else {
+					throw new Exception("Missing parameter databaseName");
+				}
+				nosqlLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
+						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
+
+			}
+
+		}
 		
 	}
 

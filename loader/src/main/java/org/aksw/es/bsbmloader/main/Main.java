@@ -87,6 +87,15 @@ public class Main {
 
 			}
 		}
+		
+		if (commandLine.hasOption("materializeElastic")) {
+			if (commandLine.hasOption("portNosql")) {
+				log.info("start materializeMongo");
+				starter.startMaterializeSimple(commandLine);
+				log.info("Done");
+
+			}
+		}
 
 		if (commandLine.hasOption("materializeCouch")) {
 			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
@@ -134,9 +143,7 @@ public class Main {
 		String[] sqldatabase = commandLine.getOptionValue("urlMysql").split("/");
 		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
 		MySQL mysql = new MySQL(queue);
-		if(!commandLine.hasOption("jdbc") ){
-			throw new Exception("Missing parameter jdbc");
-		}
+		
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
@@ -191,6 +198,7 @@ public class Main {
 		options.addOption("passwordCouch", true, "The host for CouchDB");
 		options.addOption("userCouch", true, "The host for CouchDB");
 		options.addOption("materializeCouch", false, "Materialize a N to One Relationship in MongoDB");
+		options.addOption("materializeElastic", false, "Materialize a N to One Relationship in MongoDB");
 		options.addOption("parseToExcel", false, "Import the mysql databaste to Excel");
 		options.addOption("parseToElastic", false, "Import the mysql databaste to Excel");
 		options.addOption("excelFile", true, "Use your BSBM sqlfiles");

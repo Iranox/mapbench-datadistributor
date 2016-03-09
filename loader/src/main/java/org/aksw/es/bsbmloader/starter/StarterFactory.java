@@ -24,8 +24,8 @@ public class StarterFactory {
 			return new ExcelStarter();
 		}
 		
-		if(commandLine.hasOption("materializeElastic")){
-//			return ElasticStarter
+		if(commandLine.hasOption("materializeElastic") || commandLine.hasOption("parseToElastic")){
+			return new ElasticSearchStarter();
 		}
 		
 		return null;

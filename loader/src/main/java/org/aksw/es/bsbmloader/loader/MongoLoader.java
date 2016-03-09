@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.aksw.es.bsbmloader.parser.ElementParser;
-
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
@@ -17,6 +16,7 @@ import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
+import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 import org.apache.metamodel.update.Update;
@@ -38,13 +38,15 @@ public class MongoLoader  {
 	}
 
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) {
+		createTable(target, forgeinKey);
 		Schema schema = dataContext.getSchemaByName(schemaName);
-		Column forgeinColumn = schema.getTableByName(target).getColumnByName(forgeinKey);
+		Column forgeinColumn = schema.getTableByName(target+ "_mat").getColumnByName(forgeinKey);
 		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
 		Column[] sourceColumns = schema.getTableByName(source).getColumns();
-		Table targetTable = schema.getTableByName(target);
+		Table targetTable = schema.getTableByName(target + "_mat");
 		Map<String, Object> nestedObj = new HashMap<String, Object>();
 		DataSet dataSet = dataContext.query().from(source).selectAll().execute();
+		
 
 		while (dataSet.next()) {
 			Object primaryKeyObject = dataSet.getRow().getValue(primaryColumn);
@@ -59,41 +61,116 @@ public class MongoLoader  {
 		dataSet.close();
 
 	}
+	
+	public void copyTable(String sourceTable, String targetTable){
+		dataContext.executeUpdate(new UpdateScript() {
+			
+			private String sourceTable;
+			private String targetTable;
+			
+			public void run(UpdateCallback callback) {
+				Table table =dataContext.getTableByQualifiedLabel(targetTable);
+				DataSet dataSet = dataContext.query().from(sourceTable).selectAll().execute();
+				RowInsertionBuilder rowsInsert = callback.insertInto(table);
+				while(dataSet.next()){
+					Row row = dataSet.getRow();
+					for (Column columnInsert : table.getColumns()) {
+						rowsInsert.value(columnInsert.getName(), row.getValue(columnInsert.getColumnNumber()));
+
+					}
+					rowsInsert.execute();
+				}
+				
+				
+			}
+			
+			private UpdateScript init(String sourceTable, String targetTable){
+				this.sourceTable = sourceTable;
+				this.targetTable = targetTable;
+				return this;
+				
+			}
+		}.init(sourceTable, targetTable));
+		
+		
+		
+	}
+	
+	public void createTable(String target, String forgeinKey){
+		dataContext.executeUpdate(new UpdateScript() {
+			private String targetTable;
+			private String forgeinKey;
+
+
+			public void run(UpdateCallback callback) {
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+						targetTable + "_mat");
+			
+				
+				for (Column column : dataContext.getTableByQualifiedLabel(targetTable).getColumns()) {
+					if(!column.equals(forgeinKey)){
+						tableCreation.withColumn(column.getName()).ofType(column.getType());
+					}
+					else{
+						tableCreation.withColumn(column.getName()).ofType(ColumnType.MAP);
+					}
+						
+					
+				}
+
+				tableCreation.execute();
+				
+			}
+
+			private UpdateScript init(String targetTable, String forgeinKey) {
+				this.forgeinKey = forgeinKey;
+				this.targetTable = targetTable;
+				return this;
+			}
+		}.init(target, forgeinKey));
+		copyTable(target, target + "_mat");
+
+		
+	}
+	
+	private void createComplexTable(String sourceTable, String database, String fkJoinTable){
+		dataContext.executeUpdate(new UpdateScript() {
+			private String sourceTable;
+			private String database;
+			private String fkJoinTable;
+
+			public void run(UpdateCallback callback) {
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+						sourceTable + "_matComplex");
+				Schema schema = dataContext.getSchemaByName(database);
+				tableCreation.withColumn(fkJoinTable).ofType(ColumnType.ARRAY);
+
+				for (Column column : schema.getTableByName(sourceTable).getColumns()) {
+					tableCreation.withColumn(column.getName());
+				}
+
+				tableCreation.execute();
+
+			}
+
+			private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
+				this.sourceTable = sourceTable;
+				this.database = database;
+				this.fkJoinTable = fkJoinTable;
+				return this;
+			}
+		}.init(sourceTable, database, fkJoinTable));
+	}
 
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
 		Schema schema = dataContext.getSchemaByName(database);
-		Table tables = schema.getTableByName(sourceTable + "_mat");
+		Table tables = schema.getTableByName(sourceTable + "_matComplex" );
 		if (tables == null) {
 			/**
 			 * Create Table productfeatureproduct_mat
 			 **/
-			dataContext.executeUpdate(new UpdateScript() {
-				private String sourceTable;
-				private String database;
-				private String fkJoinTable;
-
-				public void run(UpdateCallback callback) {
-					TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-							sourceTable + "_mat");
-					Schema schema = dataContext.getSchemaByName(database);
-					tableCreation.withColumn(fkJoinTable);
-
-					for (Column column : schema.getTableByName(sourceTable).getColumns()) {
-						tableCreation.withColumn(column.getName());
-					}
-
-					tableCreation.execute();
-
-				}
-
-				private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
-					this.sourceTable = sourceTable;
-					this.database = database;
-					this.fkJoinTable = fkJoinTable;
-					return this;
-				}
-			}.init(sourceTable, database, fkJoinTable));
+			createComplexTable(secondSourceTable, database, fkJoinTable);
 
 			/**
 			 * Insert Rows
@@ -128,7 +205,7 @@ public class MongoLoader  {
 
 			public void run(UpdateCallback callback) {
 				Table tables = dataContext.getTableByQualifiedLabel(table.getName());
-				Table matTable = dataContext.getTableByQualifiedLabel(table.getName() + "_mat");
+				Table matTable = dataContext.getTableByQualifiedLabel(table.getName() + "_matComplex");
 				RowInsertionBuilder rowsInsert = callback.insertInto(matTable);
 				for (Column columnInsert : column) {
 					rowsInsert.value(columnInsert.getName(), row.getValue(columnInsert.getColumnNumber()));
@@ -195,6 +272,7 @@ public class MongoLoader  {
 		return complexData;
 	}
 
+	
 	public void deleteDatabase() {
 		dataContext.executeUpdate(new UpdateScript() {
 
@@ -214,12 +292,5 @@ public class MongoLoader  {
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
 	}
-
-
-	
-
-	
-
-	
 
 }

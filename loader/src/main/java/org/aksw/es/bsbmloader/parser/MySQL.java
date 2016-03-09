@@ -1,10 +1,6 @@
-package org.aksw.es.bsbmloader.parser;
+  package org.aksw.es.bsbmloader.parser;
 
-import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
@@ -18,7 +14,6 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Relationship;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
-
 public class MySQL implements Runnable{
 	private Connection connection;
 	private String jdbcUrl;
@@ -113,12 +108,7 @@ public class MySQL implements Runnable{
 	}
 
 	private void buildConnection() throws Exception {
-		getFile(jdbcUrl);
-		URL u = new URL("file:"+  getFile(jdbcUrl));
-		String classname = getClassName(jdbcUrl);
-		URLClassLoader ucl = new URLClassLoader(new URL[] { u });
-		Driver d = (Driver)Class.forName(classname, true, ucl).newInstance();
-		DriverManager.registerDriver(new DriverLoader(d));
+		Class.forName(getClassName(jdbcUrl));
 		connection = DriverManager.getConnection(jdbcUrl, username, password);
 		dataContext = DataContextFactory.createJdbcDataContext(connection);
 	
@@ -138,17 +128,7 @@ public class MySQL implements Runnable{
 		return null;
 	}
     
-    private String getFile(String jdbc){
-    	String[] db = jdbc.split(":");
-    	File[] files = new File("src/lib").listFiles();
-    	for (File file : files) {
-    	    if (file.isFile() && file.getName().contains(db[1])) {
-//    	    	System.out.println(file.getAbsolutePath());
-    	        return file.getAbsolutePath();
-    	    }
-    	}
-    	return null;
-    }
+
 
 	
 

@@ -1,0 +1,29 @@
+mysql:
+  image: mysql
+  ports:
+  - "3306:3306"
+  environment:
+  - MYSQL_ROOT_PASSWORD = password
+  - MYSQL_DATABASE = benchmark
+postgres:
+  image: postgres
+  ports:
+  - "3307:3306"
+  environment:
+  - POSTGRES_PASSWORD = password
+  - POSTGRES_DB = benchmark
+mongo:
+  image: mongo
+  ports:
+    -  "27017:27017"
+couchdb:
+  image: tutum/couchdb
+  ports:
+    - "5984:5984"
+  environment:
+  - COUCHDB_PASS= password
+elasticserach:
+  image: elasticserach:1.4
+  ports:
+  - "9200:9200"
+  - "9300:9300"

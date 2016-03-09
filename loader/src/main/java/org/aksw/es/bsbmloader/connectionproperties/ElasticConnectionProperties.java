@@ -2,6 +2,7 @@ package org.aksw.es.bsbmloader.connectionproperties;
 
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.elasticsearch.nativeclient.ElasticSearchDataContext;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
