@@ -24,7 +24,7 @@ public class NoSQLParser implements Runnable {
 		this.queue = queue;
 	}
 	
-	
+
 
 	public UpdateableDataContext getDc() {
 		return dataContext;
@@ -42,8 +42,22 @@ public class NoSQLParser implements Runnable {
 
 			public void run(UpdateCallback callback) {
 				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
+				
+				//TODO JDBC Datentypen
 				for (Column columnTable : column) {
-					tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
+//					MysqlQueryRewriter qr = new MysqlQueryRewriter(null);
+					if(columnTable.getType().isLiteral() &&  columnTable.getColumnSize() < 30000){
+						tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType()).ofSize(columnTable.getColumnSize());
+					}else{
+						if(columnTable.getColumnSize() < 30000){
+							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
+						}else{
+							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType()).ofSize(columnTable.getColumnSize());
+//							tableCreation.withColumn(columnTable.getName()).ofNativeType(qr.rewriteColumnType(ColumnType.NVARCHAR, null));
+						}
+					
+					}
+				
 				}
 
 				tableCreation.execute();
@@ -83,7 +97,7 @@ public class NoSQLParser implements Runnable {
 
 							for (Column columnInsert : columns) {
 								Object value = null;
-								if (columnInsert.getType().isTimeBased()) {
+								if (columnInsert.getType().isTimeBased() ) {
 									value = new ElementParser().getDate(queue.getValue(columnInsert));
 								} else {
 									value = queue.getValue(columnInsert);

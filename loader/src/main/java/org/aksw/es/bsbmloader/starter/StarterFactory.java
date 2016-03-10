@@ -12,7 +12,6 @@ public class StarterFactory {
 		}
 		
 		if(commandLine.hasOption("materializeMongo") || commandLine.hasOption("parseToMongo")){
-			System.out.println("test");
 			return new MongoStarter();
 		}
 		
@@ -22,6 +21,10 @@ public class StarterFactory {
 		
 		if(commandLine.hasOption("parseToExcel")){
 			return new ExcelStarter();
+		}
+		
+		if(commandLine.hasOption("parseToJdbc")){
+			return new JdbcStarter();
 		}
 		
 		if(commandLine.hasOption("materializeElastic") || commandLine.hasOption("parseToElastic")){

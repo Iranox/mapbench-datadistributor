@@ -78,6 +78,10 @@ public class Main {
 		if (commandLine.hasOption("parseToElastic") && hasMySQLConnectionProperties(commandLine)) {
 			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
 		}
+		
+		if (commandLine.hasOption("parseToJdbc") && hasMySQLConnectionProperties(commandLine)) {
+			startParseToNoSQL(commandLine, starter.createConnectionProperties(commandLine));
+		}
 
 		if (commandLine.hasOption("materializeMongo")) {
 			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
@@ -202,6 +206,11 @@ public class Main {
 		options.addOption("parseToExcel", false, "Import the mysql databaste to Excel");
 		options.addOption("parseToElastic", false, "Import the mysql databaste to Excel");
 		options.addOption("excelFile", true, "Use your BSBM sqlfiles");
+		options.addOption("targetUrl",true,"Url of target jdbc");
+		options.addOption("user", true, "username");
+		options.addOption("password", true, "password");
+		options.addOption("parseToJdbc", false, "Import the mysql databaste to JDBC");
+		
 		return options;
 
 	}
