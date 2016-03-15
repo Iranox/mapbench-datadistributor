@@ -19,7 +19,6 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
-import org.apache.metamodel.update.Update;
 
 /**
  * @author Tobias
@@ -36,67 +35,112 @@ public class MongoLoader  {
 	public void setSchemaName(String schemaName) {
 		this.schemaName = schemaName;
 	}
+	
 
-	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) {
+	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) throws Exception {
+		
 		createTable(target, forgeinKey);
+		int offset = 0;
+		
+		
 		Schema schema = dataContext.getSchemaByName(schemaName);
 		Column forgeinColumn = schema.getTableByName(target+ "_mat").getColumnByName(forgeinKey);
 		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
 		Column[] sourceColumns = schema.getTableByName(source).getColumns();
 		Table targetTable = schema.getTableByName(target + "_mat");
-		Map<String, Object> nestedObj = new HashMap<String, Object>();
-		DataSet dataSet = dataContext.query().from(source).selectAll().execute();
-		
-
-		while (dataSet.next()) {
-			Object primaryKeyObject = dataSet.getRow().getValue(primaryColumn);
-			for (Column columns : sourceColumns) {
-				if (dataSet.getRow().getValue(columns) != null) {
-					nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
-				}
-			}
-			dataContext.executeUpdate(new Update(targetTable).where(forgeinColumn).eq(primaryKeyObject).value(forgeinColumn, nestedObj));
-			
+	
+		int rowCount = new TableCounter().getRowNumber(dataContext, source);
+//		System.out.println(rowCount);
+		if(rowCount < 3000){
+			NoSQLUpdater updater = new NoSQLUpdater(dataContext, source);
+			updater.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+			updater.setLimit(rowCount);
+			updater.start();
 		}
-		dataSet.close();
-
-	}
-	
-	public void copyTable(String sourceTable, String targetTable){
-		dataContext.executeUpdate(new UpdateScript() {
-			
-			private String sourceTable;
-			private String targetTable;
-			
-			public void run(UpdateCallback callback) {
-				Table table =dataContext.getTableByQualifiedLabel(targetTable);
-				DataSet dataSet = dataContext.query().from(sourceTable).selectAll().execute();
-				RowInsertionBuilder rowsInsert = callback.insertInto(table);
-				while(dataSet.next()){
-					Row row = dataSet.getRow();
-					for (Column columnInsert : table.getColumns()) {
-						rowsInsert.value(columnInsert.getName(), row.getValue(columnInsert.getColumnNumber()));
-
-					}
-					rowsInsert.execute();
+		else{
+			while(rowCount >= 3000){
+				
+				NoSQLUpdater firstUpdateThread =  new NoSQLUpdater(dataContext, source);
+				firstUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				NoSQLUpdater secondUpdateThread = new NoSQLUpdater(dataContext, source);
+				secondUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				NoSQLUpdater thirdUpdateThread =   new NoSQLUpdater(dataContext, source);
+				thirdUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				firstUpdateThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				secondUpdateThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				thirdUpdateThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				firstUpdateThread.start();
+				secondUpdateThread.start();
+				thirdUpdateThread.start();
+				System.out.println(offset);
+				
+				while(firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()){
+					Thread.sleep(1);
 				}
-				
-				
 			}
-			
-			private UpdateScript init(String sourceTable, String targetTable){
-				this.sourceTable = sourceTable;
-				this.targetTable = targetTable;
-				return this;
-				
-			}
-		}.init(sourceTable, targetTable));
+		}
 		
+		if(rowCount < 0){
+			NoSQLUpdater updater = new NoSQLUpdater(dataContext, source);
+			updater.setDataContext(dataContext);
+			updater.setLimit(rowCount);
+			updater.start();
+		}
+	}
+	
+	public void copyTable(String sourceTable, String targetTable) throws Exception{
+		int offset = 0;
+		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
+		if(rowCount < 3000){
+			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
+			tableCopier.setLimit(rowCount);
+			tableCopier.setOffset(0);
+			tableCopier.start();
+			rowCount = 0;
+		}
+		else{
+			while(rowCount >= 3000){
+				
+				System.out.println(offset);
+				TableCopier firstTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
+				TableCopier secondTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
+				TableCopier thirdTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
+				firstTableCopierThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				secondTableCopierThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				thirdTableCopierThread.setOffset(offset);
+				offset += 1000;
+				rowCount -= 1000;
+				firstTableCopierThread.start();
+				secondTableCopierThread.start();
+				thirdTableCopierThread.start();
+				
+				while(firstTableCopierThread.isAlive() || secondTableCopierThread.isAlive() || thirdTableCopierThread.isAlive()){
+					Thread.sleep(1);
+				}
+			}
+		}
+		
+		if(rowCount > 0){
+			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
+			tableCopier.setLimit(rowCount);
+			tableCopier.setOffset(0);
+			tableCopier.start();
+		}
 		
 		
 	}
 	
-	public void createTable(String target, String forgeinKey){
+	public void createTable(String target, String forgeinKey) throws Exception{
 		dataContext.executeUpdate(new UpdateScript() {
 			private String targetTable;
 			private String forgeinKey;
