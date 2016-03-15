@@ -1,6 +1,5 @@
 package org.aksw.es.bsbmloader.parser;
 
-
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.metamodel.UpdateCallback;
@@ -9,7 +8,9 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
+import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
 import org.apache.metamodel.schema.Column;
+import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Table;
 
 public class NoSQLParser implements Runnable {
@@ -23,43 +24,51 @@ public class NoSQLParser implements Runnable {
 		this.column = column;
 		this.queue = queue;
 	}
-	
-
 
 	public UpdateableDataContext getDc() {
 		return dataContext;
 	}
 
-
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
 	}
 
-	public void createTable(Table table, Column[] column) {
+	public void createTable(Table table, Column[] column, final IQueryRewriter typ) {
 		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
 			private Column[] column;
+			private TableCreationBuilder tableCreation;
+
+			private void createMysqlTable(Column columnTable) {
+				if (columnTable.getType().isLiteral() && columnTable.getColumnSize() < 30000) {
+					tableCreation.withColumn(columnTable.getName())
+							.ofNativeType(typ.rewriteColumnType(columnTable.getType(), columnTable.getColumnSize()));
+				} else {
+					if (columnTable.getType().isLiteral() && columnTable.getColumnSize() > 30000) {
+						tableCreation.withColumn(columnTable.getName())
+								.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
+					} else {
+						tableCreation.withColumn(columnTable.getName())
+								.ofNativeType(typ.rewriteColumnType(columnTable.getType(), null));
+					}
+				}
+			}
 
 			public void run(UpdateCallback callback) {
-				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
-				
-				//TODO JDBC Datentypen
+				tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
 				for (Column columnTable : column) {
-//					MysqlQueryRewriter qr = new MysqlQueryRewriter(null);
-					if(columnTable.getType().isLiteral() &&  columnTable.getColumnSize() < 30000){
-						tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType()).ofSize(columnTable.getColumnSize());
-					}else{
-						if(columnTable.getColumnSize() < 30000){
-							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
-						}else{
-							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType()).ofSize(columnTable.getColumnSize());
-//							tableCreation.withColumn(columnTable.getName()).ofNativeType(qr.rewriteColumnType(ColumnType.NVARCHAR, null));
-						}
-					
-					}
-				
-				}
 
+					if (typ == null) {
+						if (columnTable.getType().isLiteral()) {
+							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
+						} else {
+							tableCreation.withColumn(columnTable.getName()).ofType(columnTable.getType());
+						}
+					} else {
+						createMysqlTable(columnTable);
+					}
+
+				}
 				tableCreation.execute();
 			}
 
@@ -97,7 +106,7 @@ public class NoSQLParser implements Runnable {
 
 							for (Column columnInsert : columns) {
 								Object value = null;
-								if (columnInsert.getType().isTimeBased() ) {
+								if (columnInsert.getType().isTimeBased()) {
 									value = new ElementParser().getDate(queue.getValue(columnInsert));
 								} else {
 									value = queue.getValue(columnInsert);
@@ -106,7 +115,6 @@ public class NoSQLParser implements Runnable {
 
 							}
 							rowsInsert.execute();
-							
 
 						}
 

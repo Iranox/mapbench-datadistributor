@@ -15,6 +15,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.apache.metamodel.data.Row;
+import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
+import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
+import org.apache.metamodel.jdbc.dialects.PostgresqlQueryRewriter;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 import org.apache.commons.cli.CommandLine;
@@ -142,8 +145,7 @@ public class Main {
 	}
 
 	private static void startParseToNoSQL(CommandLine commandLine, NoSQLParser nosql) throws Exception {
-		log.info("Start Parse to NoSQL");
-		System.out.println(nosql);
+		log.info("Start Parse to NoSQL/JDBC");
 		String[] sqldatabase = commandLine.getOptionValue("urlMysql").split("/");
 		BlockingQueue<Row> queue = new ArrayBlockingQueue<Row>(1000);
 		MySQL mysql = new MySQL(queue);
@@ -158,16 +160,34 @@ public class Main {
 			Column[] column = mysql.getColumnMysql(table.getName(), sqldatabase[sqldatabase.length -1 ]);
 			mysql.setTable(table);
 			mysql.setDatabase(sqldatabase[sqldatabase.length -1 ]);
-			nosql.createTable(table, column);
+			if(!commandLine.hasOption("targetUrl")){
+				nosql.createTable(table, column, null);
+			}
+			else{
+				nosql.createTable(table, column,  getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
+			}
+			
 
 			nosql.setQueue(queue, table, column);
-			Thread test1 = new Thread(mysql);
-			Thread test2 = new Thread(nosql);
-			test1.start();
-			test2.start();
+			Thread mysqlThread = new Thread(mysql);
+			Thread firstNosqlThread = new Thread(nosql);
+			Thread secondNosqlThread = new Thread(nosql);
+			Thread thirdNosqlThread = new Thread(nosql);
+			mysqlThread.start();
+			if(!commandLine.hasOption("targetUrl")){
+				firstNosqlThread.start();
+				secondNosqlThread.start();
+				thirdNosqlThread.start();
 
-			while (test1.isAlive() || test2.isAlive()) {
-				Thread.sleep(100);
+				while (mysqlThread.isAlive() || firstNosqlThread.isAlive() || secondNosqlThread.isAlive() || thirdNosqlThread.isAlive()) {
+					Thread.sleep(1);
+				}
+			}
+			else{
+				firstNosqlThread.start();
+				while (mysqlThread.isAlive() || firstNosqlThread.isAlive()){
+					Thread.sleep(1);
+				}
 			}
 
 		}
@@ -213,6 +233,17 @@ public class Main {
 		
 		return options;
 
+	}
+	
+	private static IQueryRewriter getIQueryRewriter(String url){
+		if(url.contains("mysql")){
+			return new MysqlQueryRewriter(null);
+		}
+		if(url.contains("postgesql")){
+			return new PostgresqlQueryRewriter(null);
+		}
+		
+		return null;
 	}
 
 	private static boolean hasMySQLConnectionProperties(CommandLine commandLine) throws Exception {

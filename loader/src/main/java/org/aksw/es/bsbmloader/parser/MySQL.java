@@ -88,6 +88,8 @@ public class MySQL implements Runnable{
 		  
 			dataSet.close();
 			queue.put(new PosionRow().getPosion());
+			queue.put(new PosionRow().getPosion());
+			queue.put(new PosionRow().getPosion());
 			closeConnection();
 		} catch(Exception e){
 			log.info(e);
