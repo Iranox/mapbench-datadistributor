@@ -153,13 +153,14 @@ public class Main {
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
-		if (commandLine.hasOption("d")) {
-			// nosql.deleteDatabase();
-		}
+		
 		for (Table table : mysql.getTableMysql(sqldatabase[sqldatabase.length -1 ])) {
 			Column[] column = mysql.getColumnMysql(table.getName(), sqldatabase[sqldatabase.length -1 ]);
 			mysql.setTable(table);
 			mysql.setDatabase(sqldatabase[sqldatabase.length -1 ]);
+			if (commandLine.hasOption("d")) {
+				 nosql.deleteDatabase(table.getName());
+			}
 			if(!commandLine.hasOption("targetUrl")){
 				nosql.createTable(table, column, null);
 			}
@@ -167,7 +168,6 @@ public class Main {
 				nosql.createTable(table, column,  getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
 			}
 			
-
 			nosql.setQueue(queue, table, column);
 			Thread mysqlThread = new Thread(mysql);
 			Thread firstNosqlThread = new Thread(nosql);

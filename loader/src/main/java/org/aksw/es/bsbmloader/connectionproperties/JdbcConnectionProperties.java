@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.jdbc.JdbcDataContext;
-import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
 
 public class JdbcConnectionProperties extends ConnectionProperties {
 	private String jdbcurl;
@@ -20,7 +19,6 @@ public class JdbcConnectionProperties extends ConnectionProperties {
 	public UpdateableDataContext getDB() throws Exception {
 		Class.forName(getClassName(jdbcurl));
 		Connection connection = DriverManager.getConnection(jdbcurl, getUsername(), getPassword());
-		MysqlQueryRewriter my = new MysqlQueryRewriter( new JdbcDataContext(connection));
 		UpdateableDataContext dataContext = new JdbcDataContext(connection);
 		return dataContext;
 

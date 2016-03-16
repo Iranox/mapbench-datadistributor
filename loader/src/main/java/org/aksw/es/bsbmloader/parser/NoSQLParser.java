@@ -7,6 +7,7 @@ import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.Row;
+import org.apache.metamodel.drop.DropTable;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
 import org.apache.metamodel.schema.Column;
@@ -31,6 +32,10 @@ public class NoSQLParser implements Runnable {
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
+	}
+	
+	public void deleteDatabase(String Name) {
+		dataContext.executeUpdate(new DropTable(Name));
 	}
 
 	public void createTable(Table table, Column[] column, final IQueryRewriter typ) {

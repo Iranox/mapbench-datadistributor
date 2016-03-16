@@ -22,6 +22,10 @@ public class MongoStarter implements Starter {
 				} else {
 					throw new Exception("Missing parameter databaseName");
 				}
+				
+				if (commandLine.hasOption("d")) {
+					 mongoLoader.deleteDatabase(commandLine.getOptionValue("target"));
+				}
 				mongoLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
 						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
 
