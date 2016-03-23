@@ -91,3 +91,20 @@ At the moment, bsbmloader does not support demateriazile an excel file.
 
 ### Get 1000 rows
 http://127.0.0.1:9200/bla/_search/?size=1000&pretty=1
+
+## Build and execute
+### Build
+
+You can build this programm with :
+``cd loader``
+``mvn package -DskipTests``
+
+You can see the result in the target folger.
+
+## Run
+
+You can run the loader with :
+git add pom.xml 
+``java -jar bsbmloader-jar-with-dependencies.jar -parseToMongo -u root -p password -urlMysql jdbc:mysql://localhost/benchmark -hostNosql localhost -portNosql 27017 -databaseName bsbm``
+
+
