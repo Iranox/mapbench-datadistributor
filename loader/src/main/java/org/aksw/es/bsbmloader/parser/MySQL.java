@@ -24,7 +24,14 @@ public class MySQL implements Runnable{
 	protected BlockingQueue<Row> queue = null;
 	private Table table; 
 	private static org.apache.log4j.Logger log = Logger.getLogger(MySQL.class);
+	private int rowCount = 0;
 	
+	
+	
+	public int getRowCount() {
+		return rowCount;
+	}
+
 	public MySQL(BlockingQueue<Row> queue) {
 		this.queue = queue;
 	}
@@ -84,6 +91,7 @@ public class MySQL implements Runnable{
 			DataSet dataSet = dataContext.query().from(tables.getName()).selectAll().execute();	
 			while(dataSet.next()){
 				queue.put(dataSet.getRow());
+				rowCount++;
 			}
 		  
 			dataSet.close();

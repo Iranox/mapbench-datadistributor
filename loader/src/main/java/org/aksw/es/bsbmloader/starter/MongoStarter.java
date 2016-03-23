@@ -17,14 +17,10 @@ public class MongoStarter implements Starter {
 						commandLine.getOptionValue("portNosql"));
 				MongoLoader mongoLoader = new MongoLoader();
 				if (commandLine.hasOption("databaseName")) {
-					mongoLoader.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+					mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 					mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
 				} else {
 					throw new Exception("Missing parameter databaseName");
-				}
-				
-				if (commandLine.hasOption("d")) {
-					 mongoLoader.deleteDatabase(commandLine.getOptionValue("target"));
 				}
 				mongoLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
 						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
@@ -41,7 +37,7 @@ public class MongoStarter implements Starter {
 					commandLine.getOptionValue("portNosql"));
 			MongoLoader mongoLoader = new MongoLoader();
 			if (commandLine.hasOption("databaseName")) {
-				mongoLoader.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
+				mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 				mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
 			} else {
 				throw new Exception("Missing parameter databaseName");

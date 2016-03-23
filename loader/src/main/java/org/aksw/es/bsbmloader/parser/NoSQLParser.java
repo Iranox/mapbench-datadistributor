@@ -7,7 +7,6 @@ import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.Row;
-import org.apache.metamodel.drop.DropTable;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
 import org.apache.metamodel.schema.Column;
@@ -19,6 +18,7 @@ public class NoSQLParser implements Runnable {
 	private Table table;
 	private Column[] column;
 	private UpdateableDataContext dataContext;
+	private int rowCount = 0;
 
 	public void setQueue(BlockingQueue<Row> queue, Table table, Column[] column) {
 		this.table = table;
@@ -29,13 +29,15 @@ public class NoSQLParser implements Runnable {
 	public UpdateableDataContext getDc() {
 		return dataContext;
 	}
+	
+	
+
+	public int getRowCount() {
+		return rowCount;
+	}
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
-	}
-	
-	public void deleteDatabase(String Name) {
-		dataContext.executeUpdate(new DropTable(Name));
 	}
 
 	public void createTable(Table table, Column[] column, final IQueryRewriter typ) {
@@ -89,6 +91,7 @@ public class NoSQLParser implements Runnable {
 	}
 
 	public void run() {
+		
 
 		try {
 			Row row;
@@ -130,6 +133,7 @@ public class NoSQLParser implements Runnable {
 							return this;
 						}
 					}.init(table, column, row));
+					rowCount++;
 				}
 
 			}

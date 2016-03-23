@@ -3,7 +3,7 @@ package org.aksw.es.bsbmloader.main;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-
+import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
 import org.aksw.es.bsbmloader.database.DatabaseBuilder;
 import org.aksw.es.bsbmloader.parser.MySQL;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
@@ -26,6 +26,7 @@ public class Main {
 	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
 
 	public static void main(String[] args) {
+
 		CommandLineParser parser = new BasicParser();
 
 		try {
@@ -153,14 +154,14 @@ public class Main {
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
+		if (commandLine.hasOption("d")) {
+			// nosql.deleteDatabase();
+		}
 		
 		for (Table table : mysql.getTableMysql(sqldatabase[sqldatabase.length -1 ])) {
 			Column[] column = mysql.getColumnMysql(table.getName(), sqldatabase[sqldatabase.length -1 ]);
 			mysql.setTable(table);
 			mysql.setDatabase(sqldatabase[sqldatabase.length -1 ]);
-			if (commandLine.hasOption("d")) {
-				 nosql.deleteDatabase(table.getName());
-			}
 			if(!commandLine.hasOption("targetUrl")){
 				nosql.createTable(table, column, null);
 			}
@@ -168,6 +169,7 @@ public class Main {
 				nosql.createTable(table, column,  getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
 			}
 			
+
 			nosql.setQueue(queue, table, column);
 			Thread mysqlThread = new Thread(mysql);
 			Thread firstNosqlThread = new Thread(nosql);
@@ -182,6 +184,7 @@ public class Main {
 				while (mysqlThread.isAlive() || firstNosqlThread.isAlive() || secondNosqlThread.isAlive() || thirdNosqlThread.isAlive()) {
 					Thread.sleep(1);
 				}
+				
 			}
 			else{
 				firstNosqlThread.start();

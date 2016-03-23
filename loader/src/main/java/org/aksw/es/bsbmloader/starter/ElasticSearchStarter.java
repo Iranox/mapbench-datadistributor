@@ -8,7 +8,7 @@ import org.apache.commons.cli.CommandLine;
 public class ElasticSearchStarter implements Starter{
 
 	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
-		// TODO Auto-generated method stub
+		// TODO Implement Complex for elastic
 		
 	}
 

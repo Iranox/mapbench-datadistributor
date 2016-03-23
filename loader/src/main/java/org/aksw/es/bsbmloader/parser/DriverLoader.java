@@ -34,7 +34,6 @@ public class DriverLoader implements Driver{
 		return this.driver.jdbcCompliant();
 	}
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.jdbc.JdbcDataContext;
-
 public class JdbcConnectionProperties extends ConnectionProperties {
 	private String jdbcurl;
 	

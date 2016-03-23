@@ -1,5 +1,6 @@
 package org.aksw.es.bsbmloader.loader;
 
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -12,7 +13,6 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
-import org.apache.metamodel.drop.DropTable;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
@@ -23,45 +23,96 @@ import org.apache.metamodel.schema.Table;
 /**
  * @author Tobias
  */
-public class MongoLoader {
+public class MongoLoader  {
 	private UpdateableDataContext dataContext;
 	private String schemaName;
 	private static final int BORDER_DATASET = 3000;
 	private static final int INCREASE_OFFSET = 1000;
-	private static final String SUFFIX_NEW_TABLE = "_mat";
+	
+
+
+	public MongoLoader() {
+		super();
+	}
 
 	public void setSchemaName(String schemaName) {
 		this.schemaName = schemaName;
 	}
 	
-	public void deleteDatabase(String Name) {
-		dataContext.executeUpdate(new DropTable(Name + SUFFIX_NEW_TABLE));
-	}
+	
 
-	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey)
-			throws Exception {
-		createTable(target, forgeinKey);
-		materializeSimpleTable(source, target + SUFFIX_NEW_TABLE, forgeinKey, primaryKey);
-	}
-
-	public void materializeSimpleTable(String sourceTable, String targetTable, String fk, String pk) throws Exception {
+	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey) throws Exception {
 		int offset = 0;
-		int rowCount = new TableCounter().getRowNumber(dataContext, targetTable.replace(SUFFIX_NEW_TABLE, ""));
-		int startRowCount = rowCount;
-		System.out.println(rowCount);
-		if (rowCount < BORDER_DATASET) {
-			SimpleTableUpdater tableCopier = new SimpleTableUpdater(dataContext, sourceTable, targetTable, fk, pk);
+		
+		
+		Schema schema = dataContext.getSchemaByName(schemaName);
+		Column forgeinColumn = schema.getTableByName(target).getColumnByName(forgeinKey);
+		Column primaryColumn = schema.getTableByName(source).getColumnByName(primaryKey);
+		Column[] sourceColumns = schema.getTableByName(source).getColumns();
+		Table targetTable = schema.getTableByName(target);
+	
+		int rowCount = new TableCounter().getRowNumber(dataContext, source);
+		int startRows = rowCount;
+		if(rowCount < 3000){
+			NoSQLUpdater updater = new NoSQLUpdater(dataContext, source);
+			updater.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+			updater.setLimit(rowCount);
+			updater.updateData();
+		}
+		else{
+			while(rowCount >= BORDER_DATASET){
+				
+				NoSQLUpdater firstUpdateThread =  new NoSQLUpdater(dataContext, source);
+				firstUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				NoSQLUpdater secondUpdateThread = new NoSQLUpdater(dataContext, source);
+				secondUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				NoSQLUpdater thirdUpdateThread =   new NoSQLUpdater(dataContext, source);
+				thirdUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				firstUpdateThread.setOffset(offset);
+				offset += INCREASE_OFFSET;
+				rowCount -= INCREASE_OFFSET;
+				secondUpdateThread.setOffset(offset);
+				offset += INCREASE_OFFSET;
+				rowCount -= INCREASE_OFFSET;
+				thirdUpdateThread.setOffset(offset);
+				offset += INCREASE_OFFSET;
+				rowCount -= INCREASE_OFFSET;
+				firstUpdateThread.start();
+				secondUpdateThread.start();
+				thirdUpdateThread.start();
+				
+				while(firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()){
+					Thread.sleep(1);
+				}
+			}
+		}
+		
+		if(rowCount < 0){
+			NoSQLUpdater updater = new NoSQLUpdater(dataContext, source);
+			updater.setDataContext(dataContext);
+			updater.setLimit(rowCount);
+			updater.setOffset(startRows - rowCount);
+			updater.updateData();
+		}
+	}
+	
+	public void copyTable(String sourceTable, String targetTable) throws Exception{
+		int offset = 0;
+		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
+		if(rowCount < 3000){
+			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
 			tableCopier.setLimit(rowCount);
 			tableCopier.setOffset(0);
-			tableCopier.insertData();
+			tableCopier.start();
 			rowCount = 0;
-		} else {
-			while (rowCount >= BORDER_DATASET) {
-
-				SimpleTableUpdater firstTableCopierThread = new SimpleTableUpdater(dataContext, sourceTable, targetTable, fk, pk);
-				SimpleTableUpdater secondTableCopierThread = new SimpleTableUpdater(dataContext, sourceTable, targetTable, fk, pk);
-				SimpleTableUpdater thirdTableCopierThread = new SimpleTableUpdater(dataContext, sourceTable, targetTable, fk, pk);
-
+		}
+		else{
+			while(rowCount >= BORDER_DATASET){
+				
+				System.out.println(offset);
+				TableCopier firstTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
+				TableCopier secondTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
+				TableCopier thirdTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
 				firstTableCopierThread.setOffset(offset);
 				offset += INCREASE_OFFSET;
 				rowCount -= INCREASE_OFFSET;
@@ -71,46 +122,50 @@ public class MongoLoader {
 				thirdTableCopierThread.setOffset(offset);
 				offset += INCREASE_OFFSET;
 				rowCount -= INCREASE_OFFSET;
-
 				firstTableCopierThread.start();
 				secondTableCopierThread.start();
 				thirdTableCopierThread.start();
-
-				while (firstTableCopierThread.isAlive() || secondTableCopierThread.isAlive()
-						|| thirdTableCopierThread.isAlive()) {
+				
+				while(firstTableCopierThread.isAlive() || secondTableCopierThread.isAlive() || thirdTableCopierThread.isAlive()){
 					Thread.sleep(1);
 				}
 			}
 		}
-
-		if (rowCount > 0) {
-			SimpleTableUpdater tableCopier = new SimpleTableUpdater(sourceTable, targetTable, dataContext);
+		
+		if(rowCount > 0){
+			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
 			tableCopier.setLimit(rowCount);
-			tableCopier.setOffset(startRowCount - rowCount);
-			tableCopier.insertData();
+			tableCopier.setOffset(0);
+			tableCopier.start();
 		}
+		
+		
 	}
-
-	public void createTable(String target, String forgeinKey) throws Exception {
+	
+	public void createTable(String target, String forgeinKey) throws Exception{
 		dataContext.executeUpdate(new UpdateScript() {
 			private String targetTable;
 			private String forgeinKey;
 
+
 			public void run(UpdateCallback callback) {
 				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-						targetTable + SUFFIX_NEW_TABLE);
-
+						targetTable + "_mat");
+			
+				
 				for (Column column : dataContext.getTableByQualifiedLabel(targetTable).getColumns()) {
-					if (!column.equals(forgeinKey)) {
+					if(!column.equals(forgeinKey)){
 						tableCreation.withColumn(column.getName()).ofType(column.getType());
-					} else {
+					}
+					else{
 						tableCreation.withColumn(column.getName()).ofType(ColumnType.MAP);
 					}
-
+						
+					
 				}
 
 				tableCreation.execute();
-
+				
 			}
 
 			private UpdateScript init(String targetTable, String forgeinKey) {
@@ -119,13 +174,44 @@ public class MongoLoader {
 				return this;
 			}
 		}.init(target, forgeinKey));
+		copyTable(target, target + "_mat");
 
+		
+	}
+	
+	private void createComplexTable(String sourceTable, String database, String fkJoinTable){
+		dataContext.executeUpdate(new UpdateScript() {
+			private String sourceTable;
+			private String database;
+			private String fkJoinTable;
+
+			public void run(UpdateCallback callback) {
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+						sourceTable + "_matComplex");
+				Schema schema = dataContext.getSchemaByName(database);
+				tableCreation.withColumn(fkJoinTable).ofType(ColumnType.ARRAY);
+
+				for (Column column : schema.getTableByName(sourceTable).getColumns()) {
+					tableCreation.withColumn(column.getName());
+				}
+
+				tableCreation.execute();
+
+			}
+
+			private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
+				this.sourceTable = sourceTable;
+				this.database = database;
+				this.fkJoinTable = fkJoinTable;
+				return this;
+			}
+		}.init(sourceTable, database, fkJoinTable));
 	}
 
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
 		Schema schema = dataContext.getSchemaByName(database);
-		Table tables = schema.getTableByName(sourceTable + "_matComplex");
+		Table tables = schema.getTableByName(sourceTable + "_matComplex" );
 		if (tables == null) {
 			/**
 			 * Create Table productfeatureproduct_mat
@@ -138,9 +224,9 @@ public class MongoLoader {
 
 			tables = schema.getTableByName(sourceTable);
 			DataSet dataSet = dataContext.query().from(tables).selectAll().execute(); // get
-			// all
-			// Product
-			// Data
+																		// all
+																		// Product
+																		// Data
 			while (dataSet.next()) {
 
 				insertRows(tables, tables.getColumns(), dataSet.getRow(), fkJoinTable, secondSourceTable, joinTable,
@@ -148,10 +234,6 @@ public class MongoLoader {
 			}
 			dataSet.close();
 		}
-	}
-
-	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
-		this.dataContext = dc;
 	}
 
 	private void insertRows(Table table, Column[] column, Row row, String forgeinKey, String secondSourceTable,
@@ -208,8 +290,7 @@ public class MongoLoader {
 			Object id, String secondFkey, String secondSourceTable, String pkSecondSource) {
 		ArrayList<Object> listRows = new ArrayList<Object>();
 
-		DataSet dataSetJoin = dataContext.query().from(joinTable).select(fKey).where(secondFkey)
-				.eq(new ElementParser().getInteger(id)).execute();
+		DataSet dataSetJoin = dataContext.query().from(joinTable).select(fKey).where(secondFkey).eq(new ElementParser().getInteger(id)).execute();
 
 		while (dataSetJoin.next()) {
 			for (SelectItem column : dataSetJoin.getSelectItems()) {
@@ -223,8 +304,7 @@ public class MongoLoader {
 		while (listIter.hasNext()) {
 			int index = new ElementParser().getInteger(listIter.next());
 
-			DataSet dataSetTable = dataContext.query().from(secondSourceTable).selectAll().where(pkSecondSource)
-					.eq(index).execute();
+			DataSet dataSetTable = dataContext.query().from(secondSourceTable).selectAll().where(pkSecondSource).eq(index).execute();
 			while (dataSetTable.next()) {
 				Map<String, Object> nestedObj = new HashMap<String, Object>();
 				for (SelectItem column : dataSetTable.getSelectItems()) {
@@ -234,37 +314,29 @@ public class MongoLoader {
 			}
 			dataSetTable.close();
 		}
-
+        
 		return complexData;
 	}
 
-	private void createComplexTable(String sourceTable, String database, String fkJoinTable) {
+	
+	public void deleteDatabase() {
 		dataContext.executeUpdate(new UpdateScript() {
-			private String sourceTable;
-			private String database;
-			private String fkJoinTable;
 
 			public void run(UpdateCallback callback) {
-				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-						sourceTable + "_matComplex");
-				Schema schema = dataContext.getSchemaByName(database);
-				tableCreation.withColumn(fkJoinTable).ofType(ColumnType.ARRAY);
+				Schema schema = dataContext.getSchemaByName(schemaName);
+				for (Table table : schema.getTables()) {
+					if (!table.getName().contains("system")) {
+						callback.dropTable(table).execute();
+					}
 
-				for (Column column : schema.getTableByName(sourceTable).getColumns()) {
-					tableCreation.withColumn(column.getName());
 				}
 
-				tableCreation.execute();
-
 			}
+		});
+	}
 
-			private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
-				this.sourceTable = sourceTable;
-				this.database = database;
-				this.fkJoinTable = fkJoinTable;
-				return this;
-			}
-		}.init(sourceTable, database, fkJoinTable));
+	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
+		this.dataContext = dc;
 	}
 
 }
