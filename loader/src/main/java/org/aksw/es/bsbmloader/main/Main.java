@@ -3,7 +3,7 @@ package org.aksw.es.bsbmloader.main;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
+
 import org.aksw.es.bsbmloader.database.DatabaseBuilder;
 import org.aksw.es.bsbmloader.parser.MySQL;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;

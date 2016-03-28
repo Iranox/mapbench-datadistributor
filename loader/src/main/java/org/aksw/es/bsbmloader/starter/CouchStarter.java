@@ -1,7 +1,7 @@
 package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
-import org.aksw.es.bsbmloader.loader.CouchLoader;
+import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
@@ -13,7 +13,7 @@ public class CouchStarter implements Starter{
 			CouchConnectionProperties couch = new CouchConnectionProperties();
 			couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			CouchLoader couchLoader = new CouchLoader();
+			NoSQLLoader couchLoader = new NoSQLLoader();
 			if (commandLine.hasOption("databaseName")) {
 				couchLoader.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 						commandLine.getOptionValue("passwordCouch")));
@@ -32,7 +32,7 @@ public class CouchStarter implements Starter{
 			CouchConnectionProperties couch = new CouchConnectionProperties();
 			couch.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			CouchLoader couchLoader = new CouchLoader();
+			NoSQLLoader couchLoader = new NoSQLLoader();
 			if (commandLine.hasOption("databaseName")) {
 				couchLoader.setUpdateableDataContext(couch.getDB(commandLine.getOptionValue("userCouch"),
 						commandLine.getOptionValue("passwordCouch")));

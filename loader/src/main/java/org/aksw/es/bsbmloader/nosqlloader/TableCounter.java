@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.loader;
+package org.aksw.es.bsbmloader.nosqlloader;
 
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.DataSet;

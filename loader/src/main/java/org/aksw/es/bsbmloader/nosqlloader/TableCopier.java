@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.loader;
+package org.aksw.es.bsbmloader.nosqlloader;
 
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;

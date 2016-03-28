@@ -7,9 +7,6 @@ public class StarterFactory {
 	
 
 	public Starter getStarter(CommandLine commandLine) throws Exception{
-		if(commandLine == null){
-			return null;
-		}
 		
 		if(commandLine.hasOption("materializeMongo") || commandLine.hasOption("parseToMongo")){
 			return new MongoStarter();

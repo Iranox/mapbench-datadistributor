@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.loader;
+package org.aksw.es.bsbmloader.nosqlloader;
 
 
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import org.apache.metamodel.update.Update;
 
 
 ;
-public class NoSQLUpdater extends Thread {
+public class SimpleTableUpdater extends Thread {
 	private UpdateableDataContext dataContext;
 	private String  source;
 	private int limit;
@@ -23,7 +23,7 @@ public class NoSQLUpdater extends Thread {
 	private Column[] sourceColumns;
 	private Table targetTable;
 
-	public NoSQLUpdater(UpdateableDataContext dataContext, String source) {
+	public SimpleTableUpdater(UpdateableDataContext dataContext, String source) {
 		super();
 		this.dataContext = dataContext;
 		this.source = source;

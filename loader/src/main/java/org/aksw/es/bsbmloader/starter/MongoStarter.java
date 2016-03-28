@@ -1,7 +1,7 @@
 package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
-import org.aksw.es.bsbmloader.loader.MongoLoader;
+import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
@@ -15,7 +15,7 @@ public class MongoStarter implements Starter {
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
-				MongoLoader mongoLoader = new MongoLoader();
+				NoSQLLoader mongoLoader = new NoSQLLoader();
 				if (commandLine.hasOption("databaseName")) {
 					mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 					mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
@@ -35,7 +35,7 @@ public class MongoStarter implements Starter {
 			MongoConnectionProperties mongo = new MongoConnectionProperties();
 			mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
-			MongoLoader mongoLoader = new MongoLoader();
+			NoSQLLoader mongoLoader = new NoSQLLoader();
 			if (commandLine.hasOption("databaseName")) {
 				mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 				mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
