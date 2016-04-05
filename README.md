@@ -101,6 +101,13 @@ You can build this programm with :
 
 You can see the result in the target folger.
 
+## Parse to JDBC
+
+You can parse the databast to MySQL or PostgeSQL 
+
+-parseToJdbc -u root -p password -urlMysql  jdbc:mysql://localhost/benchmark -hostNosql localhost -portNosql 9200 -databaseName bsbm -targetUrl  jdbc:postgresql://127.0.0.1:5432/postgres
+-user postgres   -password password
+
 ## Run
 
 You can run the loader with :

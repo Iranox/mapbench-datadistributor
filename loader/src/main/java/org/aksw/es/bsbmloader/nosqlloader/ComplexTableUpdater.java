@@ -16,7 +16,6 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
-import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 
 public class ComplexTableUpdater extends Thread {

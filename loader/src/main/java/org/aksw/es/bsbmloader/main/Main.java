@@ -239,6 +239,7 @@ public class Main {
 	}
 	
 	private static IQueryRewriter getIQueryRewriter(String url){
+		System.out.println(url);
 		if(url.contains("mysql")){
 			return new MysqlQueryRewriter(null);
 		}
