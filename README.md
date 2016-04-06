@@ -37,6 +37,7 @@ If you have this database and collections, you can use this :
 
 ``-parseToMongo -u root -p password  -urlMysql jdbc:mysql://localhost/benchmark -hostNosql localhost -portNosql 27017 -databaseName bsbm -d``
 
+
 The collections will be removed.   
 
 ### dematerialize n:1
@@ -44,6 +45,10 @@ The collections will be removed.
 This command dematerialize a simple N:1 relationship. It create a new collection target_mat and copy the new data in this collection.
 
 ``-materializeMongo -target offer -source product -fk product -pk nr -hostNosql localhost -portNosql 27017 -databaseName bsbm``
+
+If you want to have only the ObjectID _id, the use :
+
+``-materializeMongo -target offer -source product -fk product -pk nr -hostNosql localhost -portNosql 27017 -databaseName bsbm -objectId``
 
 If exist a target_mat collection, you should run this command.  
 
@@ -55,6 +60,10 @@ This will delete the collection.
 ### demateriazile n:m
 
 ``-materializeMongo -hostNosql localhost -portNosql 27017 -databaseName bsbm -source product -fk productFeature -join productfeatureproduct -secondSource productfeature -pkSecond nr -pk nr -secondFkey product``
+
+If you want to have only the ObjectID _id, the use :
+
+``-materializeMongo -hostNosql localhost -portNosql 27017 -databaseName bsbm -source product -fk productFeature -join productfeatureproduct -secondSource productfeature -pkSecond nr -pk nr -secondFkey product -objectID``
 
 ## CouchDB
 ### parse to CouchDB

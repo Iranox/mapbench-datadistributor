@@ -6,8 +6,6 @@ import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
 public class MongoStarter implements Starter {
-	
-	
 
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
@@ -16,29 +14,38 @@ public class MongoStarter implements Starter {
 				mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 						commandLine.getOptionValue("portNosql"));
 				NoSQLLoader mongoLoader = new NoSQLLoader();
+				if (commandLine.hasOption("objectId")) {
+					mongoLoader.setOnlyID(true);
+				}
+
 				if (commandLine.hasOption("databaseName")) {
-					mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
-					mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
+					mongoLoader.setUpdateableDataContext(
+							mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 				} else {
 					throw new Exception("Missing parameter databaseName");
 				}
-				mongoLoader.materializeSimpleData(commandLine.getOptionValue("target"), commandLine.getOptionValue("source"),
-						commandLine.getOptionValue("fk"), commandLine.getOptionValue("pk"));
+				mongoLoader.materializeSimpleData(commandLine.getOptionValue("target"),
+						commandLine.getOptionValue("source"), commandLine.getOptionValue("fk"),
+						commandLine.getOptionValue("pk"));
 
 			}
 
 		}
 	}
 
-	public  void startMaterializeComplex(CommandLine commandLine) throws Exception {
+	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("join")) {
 			MongoConnectionProperties mongo = new MongoConnectionProperties();
 			mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
 					commandLine.getOptionValue("portNosql"));
+
 			NoSQLLoader mongoLoader = new NoSQLLoader();
+			if (commandLine.hasOption("objectId")) {
+				mongoLoader.setOnlyID(true);
+			}
 			if (commandLine.hasOption("databaseName")) {
-				mongoLoader.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
-				mongoLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
+				mongoLoader
+						.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}
@@ -57,10 +64,9 @@ public class MongoStarter implements Starter {
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		NoSQLParser nosql = new NoSQLParser();
-		mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
-				commandLine.getOptionValue("portNosql"));
+		mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
 		if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-			
+
 			if (commandLine.hasOption("databaseName")) {
 				nosql.setUpdateableDataContext(mongo.getDB(commandLine.getOptionValue("databaseName")));
 			} else {
@@ -70,8 +76,5 @@ public class MongoStarter implements Starter {
 		System.out.println(nosql.getDc());
 		return nosql;
 	}
-
-
-	
 
 }

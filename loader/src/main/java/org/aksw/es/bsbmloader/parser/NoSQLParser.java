@@ -89,6 +89,23 @@ public class NoSQLParser implements Runnable {
 		}.init(table, column));
 
 	}
+	
+
+	public void deleteDatabase(String name) {
+		dataContext.executeUpdate(new UpdateScript() {
+			private String name;
+
+			public void run(UpdateCallback callback) {
+			    Table table = dataContext.getTableByQualifiedLabel(name);
+			    callback.dropTable(table).execute();;
+			}
+			
+		private UpdateScript init(String name){
+			this.name = name;
+			return this;
+		}
+		}.init(name));
+	}
 
 	public void run() {
 		

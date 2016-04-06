@@ -6,7 +6,6 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
-import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 
 /**
@@ -14,18 +13,23 @@ import org.apache.metamodel.schema.Table;
  */
 public class NoSQLLoader {
 	private UpdateableDataContext dataContext;
-	private String schemaName;
 	private static final int BORDER_DATASET = 3000;
 	private static final int INCREASE_OFFSET = 1000;
+	private boolean onlyID = false;
 
 	public NoSQLLoader() {
 		super();
 	}
+	
+	
 
-	public void setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
+	public void setOnlyID(boolean onlyID) {
+		this.onlyID = onlyID;
 	}
 
+
+
+	
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey)
 			throws Exception {
 		int offset = 0;
@@ -40,6 +44,9 @@ public class NoSQLLoader {
 		int startRows = rowCount;
 		if (rowCount < 3000) {
 			SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
+			if(onlyID){
+				updater.setOnlyID(true);
+			}
 			updater.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
 			updater.setLimit(rowCount);
 			updater.updateData();
@@ -51,6 +58,11 @@ public class NoSQLLoader {
 				SimpleTableUpdater secondUpdateThread = new SimpleTableUpdater(dataContext, source);
 				secondUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
 				SimpleTableUpdater thirdUpdateThread = new SimpleTableUpdater(dataContext, source);
+				if(onlyID){
+					firstUpdateThread.setOnlyID(true);
+					secondUpdateThread.setOnlyID(true);
+					thirdUpdateThread.setOnlyID(true);
+				}
 				thirdUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
 				firstUpdateThread.setOffset(offset);
 				offset += INCREASE_OFFSET;
@@ -73,6 +85,9 @@ public class NoSQLLoader {
 
 		if (rowCount < 0) {
 			SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
+			if(onlyID){
+				updater.setOnlyID(true);
+			}
 			updater.setDataContext(dataContext);
 			updater.setLimit(rowCount);
 			updater.setOffset(startRows - rowCount);
@@ -177,9 +192,12 @@ public class NoSQLLoader {
 			int offset = 0;
 			int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
 			int startRows = rowCount;
-			if (rowCount < 3000) {
+			if (rowCount < BORDER_DATASET) {
 				ComplexTableUpdater updater = new ComplexTableUpdater(database, sourceTable, fkJoinTable, joinTable,
 						secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
+				if(onlyID){
+					updater.setOnlyID(true);
+				}
 				updater.setDataContext(dataContext);
 				updater.setLimit(rowCount);
 				updater.materializeComplexData(database, sourceTable, fkJoinTable, joinTable, secondSourceTable,
@@ -218,6 +236,9 @@ public class NoSQLLoader {
 			if (rowCount < 0) {
 				ComplexTableUpdater updater = new ComplexTableUpdater(database, sourceTable, fkJoinTable, joinTable,
 						secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
+				if(onlyID){
+					updater.setOnlyID(true);
+				}
 				updater.setDataContext(dataContext);
 				updater.setLimit(rowCount);
 				updater.setOffset(startRows - rowCount);
@@ -230,21 +251,6 @@ public class NoSQLLoader {
 
 	
 
-	public void deleteDatabase() {
-		dataContext.executeUpdate(new UpdateScript() {
-
-			public void run(UpdateCallback callback) {
-				Schema schema = dataContext.getSchemaByName(schemaName);
-				for (Table table : schema.getTables()) {
-					if (!table.getName().contains("system")) {
-						callback.dropTable(table).execute();
-					}
-
-				}
-
-			}
-		});
-	}
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;

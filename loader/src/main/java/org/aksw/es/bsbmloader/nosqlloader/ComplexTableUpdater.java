@@ -30,6 +30,7 @@ public class ComplexTableUpdater extends Thread {
 	private String pkSecondSource;
 	private String pkFirstSource;
 	private String secondFkey;
+	private boolean onlyID = false;
 
 	public ComplexTableUpdater(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
@@ -44,6 +45,10 @@ public class ComplexTableUpdater extends Thread {
 		this.secondFkey = secondFkey;
 	}
 
+	public void setOnlyID(boolean onlyID) {
+		this.onlyID = onlyID;
+	}
+
 	public void setDataContext(UpdateableDataContext dataContext) {
 		this.dataContext = dataContext;
 	}
@@ -55,7 +60,7 @@ public class ComplexTableUpdater extends Thread {
 	public void setOffset(int offset) {
 		this.offset = offset;
 	}
-	
+
 	public void createComplexTable(String sourceTable, String database, String fkJoinTable) {
 		dataContext.executeUpdate(new UpdateScript() {
 			private String sourceTable;
@@ -87,26 +92,24 @@ public class ComplexTableUpdater extends Thread {
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
 		Table tables = dataContext.getTableByQualifiedLabel(sourceTable + "_matComplex");
-		
 
-			tables = dataContext.getTableByQualifiedLabel(sourceTable);
-			DataSet dataSet = dataContext.query().from(tables).selectAll().limit(limit).offset(offset).execute();// get
-			// all
-			// Product
-			// Data
-			while (dataSet.next()) {
-				
+		tables = dataContext.getTableByQualifiedLabel(sourceTable);
+		DataSet dataSet = dataContext.query().from(tables).selectAll().limit(limit).offset(offset).execute();// get
+		// all
+		// Product
+		// Data
+		while (dataSet.next()) {
 
-				insertRows(tables, tables.getColumns(), dataSet.getRow(), fkJoinTable, secondSourceTable, joinTable,
-						pkSecondSource, pkFirstSource, secondFkey);
-			}
-			dataSet.close();
-		
+			insertRows(tables, tables.getColumns(), dataSet.getRow(), fkJoinTable, secondSourceTable, joinTable,
+					pkSecondSource, pkFirstSource, secondFkey);
+		}
+		dataSet.close();
+
 	}
 
 	public void insertRows(Table table, Column[] column, Row row, String forgeinKey, String secondSourceTable,
 			String joinTable, String pkSecondSource, String pkFirstSource, String secondFkey) {
-		
+
 		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
 			private Column[] column;
@@ -120,12 +123,11 @@ public class ComplexTableUpdater extends Thread {
 
 			public void run(UpdateCallback callback) {
 				Table tables = dataContext.getTableByQualifiedLabel(table.getName());
-			
+
 				Table matTable = dataContext.getTableByQualifiedLabel(table.getName() + "_matComplex");
 				RowInsertionBuilder rowsInsert = callback.insertInto(matTable);
 				for (Column columnInsert : column) {
 					rowsInsert.value(columnInsert.getName(), row.getValue(columnInsert.getColumnNumber()));
-					
 
 				}
 				Table table = dataContext.getTableByQualifiedLabel(secondSourceTable);
@@ -179,11 +181,23 @@ public class ComplexTableUpdater extends Thread {
 			DataSet dataSetTable = dataContext.query().from(secondSourceTable).selectAll().where(pkSecondSource)
 					.eq(index).execute();
 			while (dataSetTable.next()) {
-				Map<String, Object> nestedObj = new HashMap<String, Object>();
-				for (SelectItem column : dataSetTable.getSelectItems()) {
-					nestedObj.put(column.getColumn().getName(), dataSetTable.getRow().getValue(column));
+				if (!onlyID) {
+					Map<String, Object> nestedObj = new HashMap<String, Object>();
+					for (SelectItem column : dataSetTable.getSelectItems()) {
+						nestedObj.put(column.getColumn().getName(), dataSetTable.getRow().getValue(column));
+					}
+					complexData.add(nestedObj);
+				} else {
+					Map<String, Object> nestedObj = new HashMap<String, Object>();
+					for (SelectItem column : dataSetTable.getSelectItems()) {
+						if (column.getColumn().isPrimaryKey()) {
+							nestedObj.put(column.getColumn().getName(), dataSetTable.getRow().getValue(column));
+						}
+
+					}
+					complexData.add(nestedObj);
 				}
-				complexData.add(nestedObj);
+
 			}
 			dataSetTable.close();
 		}

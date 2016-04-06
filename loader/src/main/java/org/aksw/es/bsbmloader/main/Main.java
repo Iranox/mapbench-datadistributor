@@ -154,11 +154,12 @@ public class Main {
 		mysql.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 				commandLine.getOptionValue("p"));
 
-		if (commandLine.hasOption("d")) {
-			// nosql.deleteDatabase();
-		}
+		
 		
 		for (Table table : mysql.getTableMysql(sqldatabase[sqldatabase.length -1 ])) {
+			if (commandLine.hasOption("d")) {
+				 nosql.deleteDatabase(table.getName());
+			}
 			Column[] column = mysql.getColumnMysql(table.getName(), sqldatabase[sqldatabase.length -1 ]);
 			mysql.setTable(table);
 			mysql.setDatabase(sqldatabase[sqldatabase.length -1 ]);
@@ -233,13 +234,14 @@ public class Main {
 		options.addOption("user", true, "username");
 		options.addOption("password", true, "password");
 		options.addOption("parseToJdbc", false, "Import the mysql databaste to JDBC");
+		options.addOption("objectId", false, "use only ObjectId");
 		
 		return options;
 
 	}
 	
 	private static IQueryRewriter getIQueryRewriter(String url){
-		System.out.println(url);
+	
 		if(url.contains("mysql")){
 			return new MysqlQueryRewriter(null);
 		}

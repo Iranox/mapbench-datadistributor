@@ -22,6 +22,7 @@ public class SimpleTableUpdater extends Thread {
 	private Column primaryColumn;
 	private Column[] sourceColumns;
 	private Table targetTable;
+	private boolean onlyID = false;
 
 	public SimpleTableUpdater(UpdateableDataContext dataContext, String source) {
 		super();
@@ -31,6 +32,12 @@ public class SimpleTableUpdater extends Thread {
 		offset = 0;
 	}
 	
+	public void setOnlyID(boolean onlyID) {
+		this.onlyID = onlyID;
+	}
+
+
+
 
 	public void setLimit(int limit) {
 		this.limit = limit;
@@ -62,11 +69,20 @@ public class SimpleTableUpdater extends Thread {
 		DataSet dataSet = dataContext.query().from(source).selectAll().limit(limit).offset(offset).execute();
 		while (dataSet.next()) {
 			Object primaryKeyObject = dataSet.getRow().getValue(primaryColumn);
-			for (Column columns : sourceColumns) {
-				if (dataSet.getRow().getValue(columns) != null) {
-					nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
+			if(!onlyID){
+				for (Column columns : sourceColumns) {
+					if (dataSet.getRow().getValue(columns) != null) {
+						nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
+					}
+				}
+			}else{
+				for (Column columns : sourceColumns) {
+					if (dataSet.getRow().getValue(columns) != null && columns.isPrimaryKey()) {
+						nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
+					}
 				}
 			}
+			
 			Update update = new Update(this.targetTable).where(forgeinColumn).eq(primaryKeyObject).value(forgeinColumn, nestedObj);
 			dataContext.executeUpdate(update);
 			
@@ -74,7 +90,7 @@ public class SimpleTableUpdater extends Thread {
 		dataSet.close();
 	}
 	
-	
+
 
 	public void run(){
 		updateData();

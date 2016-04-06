@@ -20,7 +20,6 @@ public class ElasticSearchStarter implements Starter{
 				NoSQLLoader nosqlLoader = new NoSQLLoader();
 				if (commandLine.hasOption("databaseName")) {
 					nosqlLoader.setUpdateableDataContext(elastic.getDB(commandLine.getOptionValue("databaseName")));
-					nosqlLoader.setSchemaName(commandLine.getOptionValue("databaseName"));
 				} else {
 					throw new Exception("Missing parameter databaseName");
 				}
