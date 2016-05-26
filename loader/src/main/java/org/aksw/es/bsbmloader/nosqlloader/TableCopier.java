@@ -9,6 +9,7 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
+//TODO Still need ?
 public class TableCopier extends Thread {
 	private UpdateableDataContext dataContext;
 	private String sourceTable;
@@ -73,5 +74,5 @@ public class TableCopier extends Thread {
 
 		});
 
-	}
+	} 
 }

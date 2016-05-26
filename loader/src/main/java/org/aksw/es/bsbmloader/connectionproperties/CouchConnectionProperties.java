@@ -15,8 +15,9 @@ public class CouchConnectionProperties extends ConnectionProperties {
 	
 
 	public UpdateableDataContext getDB(String user, String password) throws Exception {
-		HttpClient httpClient = new StdHttpClient.Builder().host(getHostname()).password(password).username(user).build();
+		HttpClient httpClient = new StdHttpClient.Builder().host(getHostname()).password(password).username(user).maxConnections(4).build();
 		StdCouchDbInstance couchDbInstance = new StdCouchDbInstance(httpClient);
+		
 		UpdateableDataContext dataContext = new CouchDbDataContext(couchDbInstance);
 		return dataContext;
 	}

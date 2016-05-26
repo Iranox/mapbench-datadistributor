@@ -18,6 +18,7 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Table;
 
+//TODO Remove Class, Use instead Test 
 public class ComplexTableUpdater extends Thread {
 	private UpdateableDataContext dataContext;
 	private int limit;
@@ -64,7 +65,6 @@ public class ComplexTableUpdater extends Thread {
 	public void createComplexTable(String sourceTable, String database, String fkJoinTable) {
 		dataContext.executeUpdate(new UpdateScript() {
 			private String sourceTable;
-			private String database;
 			private String fkJoinTable;
 
 			public void run(UpdateCallback callback) {
@@ -80,13 +80,12 @@ public class ComplexTableUpdater extends Thread {
 
 			}
 
-			private UpdateScript init(String sourceTable, String database, String fkJoinTable) {
+			private UpdateScript init(String sourceTable,  String fkJoinTable) {
 				this.sourceTable = sourceTable;
-				this.database = database;
 				this.fkJoinTable = fkJoinTable;
 				return this;
 			}
-		}.init(sourceTable, database, fkJoinTable));
+		}.init(sourceTable, fkJoinTable));
 	}
 
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,

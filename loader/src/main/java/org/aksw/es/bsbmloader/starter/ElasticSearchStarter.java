@@ -11,7 +11,7 @@ public class ElasticSearchStarter implements Starter{
 		// TODO Implement Complex for elastic
 		
 	}
-
+	//TODO 	restructuring function 
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
 			if (commandLine.hasOption("fk") && commandLine.hasOption("fk")) {
@@ -31,7 +31,7 @@ public class ElasticSearchStarter implements Starter{
 		}
 		
 	}
-
+	//TODO 	restructuring function 
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		ElasticConnectionProperties elastic = new ElasticConnectionProperties();
 		NoSQLParser nosql = new NoSQLParser();

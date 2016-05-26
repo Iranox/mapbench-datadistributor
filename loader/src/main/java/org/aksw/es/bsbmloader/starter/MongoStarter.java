@@ -2,11 +2,13 @@ package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
 import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
+import org.aksw.es.bsbmloader.nosqlloader.Test;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.apache.commons.cli.CommandLine;
 
 public class MongoStarter implements Starter {
-
+ 
+	//TODO 	restructuring function 
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
 			if (commandLine.hasOption("fk") && commandLine.hasOption("fk")) {
@@ -33,7 +35,9 @@ public class MongoStarter implements Starter {
 		}
 	}
 
+	//TODO 	restructuring function 
 	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
+		Test test = new Test();
 		if (commandLine.hasOption("join")) {
 			MongoConnectionProperties mongo = new MongoConnectionProperties();
 			mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
@@ -44,23 +48,33 @@ public class MongoStarter implements Starter {
 				mongoLoader.setOnlyID(true);
 			}
 			if (commandLine.hasOption("databaseName")) {
+				 
+				 test.setDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 				mongoLoader
 						.setUpdateableDataContext(mongo.getDBwriteConcern(commandLine.getOptionValue("databaseName")));
 			} else {
 				throw new Exception("Missing parameter databaseName");
 			}
+			test.setPkSecond(commandLine.getOptionValue("pkSecond"));
+			test.setSecondSource( commandLine.getOptionValue("secondSource"));
+			
+		test.compressData(commandLine.getOptionValue("join"), commandLine.getOptionValue("secondFkey"), commandLine.getOptionValue("fk"));
+		mongoLoader.materializeSimpleData(commandLine.getOptionValue("join"),
+				commandLine.getOptionValue("source"), commandLine.getOptionValue("secondFkey"),
+				commandLine.getOptionValue("pk"));
+		
 
-			mongoLoader.materializeComplexData(commandLine.getOptionValue("databaseName"),
+		/**	mongoLoader.materializeComplexData(commandLine.getOptionValue("databaseName"),
 					commandLine.getOptionValue("source"), commandLine.getOptionValue("fk"),
 					commandLine.getOptionValue("join"), commandLine.getOptionValue("secondSource"),
 					commandLine.getOptionValue("pkSecond"), commandLine.getOptionValue("pk"),
 					commandLine.getOptionValue("secondFkey"));
 			;
-
-		}
+**/
+		} 
 
 	}
-
+	//TODO 	restructuring function 
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		NoSQLParser nosql = new NoSQLParser();
@@ -73,7 +87,7 @@ public class MongoStarter implements Starter {
 				throw new Exception("Missing parameter databaseName");
 			}
 		}
-		System.out.println(nosql.getDc());
+		
 		return nosql;
 	}
 

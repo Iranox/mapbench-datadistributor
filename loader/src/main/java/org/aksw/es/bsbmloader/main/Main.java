@@ -63,7 +63,7 @@ public class Main {
 		}
 
 	}
-	
+	//TODO 	restructuring function 
 	private static void interpretCommandLine(CommandLine commandLine) throws Exception{
 		Starter starter = new StarterFactory().getStarter(commandLine);
 
@@ -89,7 +89,7 @@ public class Main {
 
 		if (commandLine.hasOption("materializeMongo")) {
 			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-				log.info("start materializeMongo");
+				log.info("start materializeMongo"); //TODO dont trigger by simple mat.
 				starter.startMaterializeSimple(commandLine);
 				log.info("Done");
 
@@ -118,6 +118,7 @@ public class Main {
 			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
 				log.info("start materializeMongo");
 				starter.startMaterializeComplex(commandLine);
+				log.info("Done");
 
 			}
 		}
@@ -144,7 +145,7 @@ public class Main {
 		db.initBSBMDatabase(path);
 
 	}
-
+	//TODO 	restructuring function 
 	private static void startParseToNoSQL(CommandLine commandLine, NoSQLParser nosql) throws Exception {
 		log.info("Start Parse to NoSQL/JDBC");
 		String[] sqldatabase = commandLine.getOptionValue("urlMysql").split("/");
@@ -198,7 +199,7 @@ public class Main {
 
 		log.info("Done");
 	}
-
+	//TODO 	restructuring function 
 	private static Options getOption() {
 		Options options = new Options();
 		options.addOption("h", "help", false, "Show help");

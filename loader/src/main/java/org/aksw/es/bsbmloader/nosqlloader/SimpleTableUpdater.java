@@ -70,12 +70,14 @@ public class SimpleTableUpdater extends Thread {
 		while (dataSet.next()) {
 			Object primaryKeyObject = dataSet.getRow().getValue(primaryColumn);
 			if(!onlyID){
+				//TODO create new function for this
 				for (Column columns : sourceColumns) {
 					if (dataSet.getRow().getValue(columns) != null) {
 						nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));
 					}
 				}
 			}else{
+				//TODO create new function for this
 				for (Column columns : sourceColumns) {
 					if (dataSet.getRow().getValue(columns) != null && columns.isPrimaryKey()) {
 						nestedObj.put(columns.getName(), dataSet.getRow().getValue(columns));

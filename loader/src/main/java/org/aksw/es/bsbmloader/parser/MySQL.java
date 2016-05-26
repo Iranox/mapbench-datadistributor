@@ -14,6 +14,7 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Relationship;
 import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
+
 public class MySQL implements Runnable{
 	private Connection connection;
 	private String jdbcUrl;

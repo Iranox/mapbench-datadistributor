@@ -13,7 +13,7 @@ public class JdbcStarter implements Starter {
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		throw new Exception("Jdbc does not support this");
 	}
-
+	//TODO 	restructuring function 
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		JdbcConnectionProperties jdbc = new JdbcConnectionProperties();
 	    if (commandLine.hasOption("hostNosql") && commandLine.hasOption("user")) {

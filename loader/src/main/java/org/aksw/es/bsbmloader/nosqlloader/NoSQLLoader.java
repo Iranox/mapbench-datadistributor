@@ -29,7 +29,7 @@ public class NoSQLLoader {
 
 
 
-	
+	//TODO 	restructuring function 
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey)
 			throws Exception {
 		int offset = 0;
@@ -76,7 +76,8 @@ public class NoSQLLoader {
 				firstUpdateThread.start();
 				secondUpdateThread.start();
 				thirdUpdateThread.start();
-
+				
+                //TODO Use Thread.join instead Thread.isAlive
 				while (firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()) {
 					Thread.sleep(1);
 				}
@@ -94,7 +95,7 @@ public class NoSQLLoader {
 			updater.updateData();
 		}
 	}
-
+	//TODO 	Still Need ?
 	public void copyTable(String sourceTable, String targetTable) throws Exception {
 		int offset = 0;
 		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
@@ -123,7 +124,7 @@ public class NoSQLLoader {
 				firstTableCopierThread.start();
 				secondTableCopierThread.start();
 				thirdTableCopierThread.start();
-
+				 //TODO Use Thread.join instead Thread.isAlive
 				while (firstTableCopierThread.isAlive() || secondTableCopierThread.isAlive()
 						|| thirdTableCopierThread.isAlive()) {
 					Thread.sleep(1);
@@ -173,7 +174,7 @@ public class NoSQLLoader {
 	}
 
 	
-
+    //TODO use new function. 
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) throws Exception {
 		
@@ -226,7 +227,8 @@ public class NoSQLLoader {
 					firstUpdateThread.start();
 					secondUpdateThread.start();
 					thirdUpdateThread.start();
-
+					        
+					//TODO Use Thread.join instead of Thread.isAlive
 					while (firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()) {
 						Thread.sleep(1);
 					}

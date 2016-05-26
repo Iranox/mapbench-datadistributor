@@ -7,6 +7,7 @@ import org.apache.commons.cli.CommandLine;
 
 public class CouchStarter implements Starter{
 	
+	//TODO 	restructuring function 
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source") && commandLine.hasOption("fk")
 				&& commandLine.hasOption("fk")) {
@@ -27,6 +28,7 @@ public class CouchStarter implements Starter{
 
 	}
 
+	//TODO 	restructuring function 
 	public  void startMaterializeComplex(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("join")) {
 			CouchConnectionProperties couch = new CouchConnectionProperties();
@@ -52,9 +54,7 @@ public class CouchStarter implements Starter{
 
 	}
 
-
-
-
+	//TODO 	restructuring function 
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		NoSQLParser nosql = new NoSQLParser();
 		CouchConnectionProperties couch = new CouchConnectionProperties();
