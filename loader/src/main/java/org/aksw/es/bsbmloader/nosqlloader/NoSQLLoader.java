@@ -1,11 +1,7 @@
 package org.aksw.es.bsbmloader.nosqlloader;
 
-import org.apache.metamodel.UpdateCallback;
-import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
-import org.apache.metamodel.create.TableCreationBuilder;
 import org.apache.metamodel.schema.Column;
-import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Table;
 
 /**
@@ -16,54 +12,86 @@ public class NoSQLLoader {
 	private static final int BORDER_DATASET = 3000;
 	private static final int INCREASE_OFFSET = 1000;
 	private boolean onlyID = false;
+	private Column forgeinColumn;
+	private Column primaryColumn;
+	private Column[] sourceColumns;
+	private Table targetTable;
+	private int offset;
+	private int rowCount;
+	private int startRows;
 
 	public NoSQLLoader() {
 		super();
+		offset = 0;
 	}
-	
-	
 
 	public void setOnlyID(boolean onlyID) {
 		this.onlyID = onlyID;
 	}
+	
 
-
-
-	//TODO 	restructuring function 
 	public void materializeSimpleData(String target, String source, String forgeinKey, String primaryKey)
 			throws Exception {
-		int offset = 0;
 
-		
-		Column forgeinColumn = dataContext.getTableByQualifiedLabel(target).getColumnByName(forgeinKey);
-		Column primaryColumn = dataContext.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
-		Column[] sourceColumns = dataContext.getTableByQualifiedLabel(source).getColumns();
-		Table targetTable = dataContext.getTableByQualifiedLabel(target);
+		forgeinColumn = dataContext.getTableByQualifiedLabel(target).getColumnByName(forgeinKey);
+		primaryColumn = dataContext.getTableByQualifiedLabel(source).getColumnByName(primaryKey);
+		sourceColumns = dataContext.getTableByQualifiedLabel(source).getColumns();
+		targetTable = dataContext.getTableByQualifiedLabel(target);
 
-		int rowCount = new TableCounter().getRowNumber(dataContext, source);
+	    rowCount = new TableCounter().getRowNumber(dataContext, source);
+		startRows = rowCount;
+		if (rowCount < BORDER_DATASET ) {
+			simpleUpdateWithoutThread(source);
+		} else {
+			 simpleUpdateThreads(source);
+		}
+
+		//TODO  A Mistake ?
+		if (rowCount < 0) {
+			simpleUpdateWithoutTHreadRemain(source);
+		}
+	}
+
+	// TODO use new function.
+	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
+			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) throws Exception {
+
+		ComplexTableUpdater createTable = new ComplexTableUpdater();
+		createTable.setDataContext(dataContext);
+
+		/**
+		 * Insert Rows
+		 */
+		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
 		int startRows = rowCount;
-		if (rowCount < 3000) {
-			SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
-			if(onlyID){
-				updater.setOnlyID(true);
-			}
-			updater.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+		if (rowCount < BORDER_DATASET) {
+			ComplexTableUpdater updater = new ComplexTableUpdater();
+			updater.setPkSecond(pkSecondSource);
+			updater.setSecondSource(secondSourceTable);
+			/**
+			 * if(onlyID){ updater.setOnlyID(true); }
+			 **/
+			updater.setDataContext(dataContext);
 			updater.setLimit(rowCount);
-			updater.updateData();
+			updater.compressData(joinTable, secondFkey, fkJoinTable);
 		} else {
 			while (rowCount >= BORDER_DATASET) {
 
-				SimpleTableUpdater firstUpdateThread = new SimpleTableUpdater(dataContext, source);
-				firstUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
-				SimpleTableUpdater secondUpdateThread = new SimpleTableUpdater(dataContext, source);
-				secondUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
-				SimpleTableUpdater thirdUpdateThread = new SimpleTableUpdater(dataContext, source);
-				if(onlyID){
-					firstUpdateThread.setOnlyID(true);
-					secondUpdateThread.setOnlyID(true);
-					thirdUpdateThread.setOnlyID(true);
-				}
-				thirdUpdateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+				ComplexTableUpdater firstUpdateThread = new ComplexTableUpdater();
+				ComplexTableUpdater secondUpdateThread = new ComplexTableUpdater();
+				ComplexTableUpdater thirdUpdateThread = new ComplexTableUpdater();
+				firstUpdateThread.setPkSecond(pkSecondSource);
+				firstUpdateThread.setSecondSource(secondSourceTable);
+				firstUpdateThread.setDataContext(dataContext);
+				secondUpdateThread.setPkSecond(pkSecondSource);
+				secondUpdateThread.setSecondSource(secondSourceTable);
+				thirdUpdateThread.setPkSecond(pkSecondSource);
+				thirdUpdateThread.setSecondSource(secondSourceTable);
+				firstUpdateThread.setProperty(joinTable, secondFkey, fkJoinTable);
+				secondUpdateThread.setProperty(joinTable, secondFkey, fkJoinTable);
+				thirdUpdateThread.setProperty(joinTable, secondFkey, fkJoinTable);
+				secondUpdateThread.setDataContext(dataContext);
+				thirdUpdateThread.setDataContext(dataContext);
 				firstUpdateThread.setOffset(offset);
 				offset += INCREASE_OFFSET;
 				rowCount -= INCREASE_OFFSET;
@@ -76,186 +104,94 @@ public class NoSQLLoader {
 				firstUpdateThread.start();
 				secondUpdateThread.start();
 				thirdUpdateThread.start();
-				
-                //TODO Use Thread.join instead Thread.isAlive
-				while (firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()) {
-					Thread.sleep(1);
-				}
+
+				firstUpdateThread.join();
+				secondUpdateThread.join();
+				thirdUpdateThread.join();
 			}
 		}
 
 		if (rowCount < 0) {
-			SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
-			if(onlyID){
-				updater.setOnlyID(true);
-			}
-			updater.setDataContext(dataContext);
-			updater.setLimit(rowCount);
-			updater.setOffset(startRows - rowCount);
-			updater.updateData();
-		}
-	}
-	//TODO 	Still Need ?
-	public void copyTable(String sourceTable, String targetTable) throws Exception {
-		int offset = 0;
-		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
-		if (rowCount < 3000) {
-			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
-			tableCopier.setLimit(rowCount);
-			tableCopier.setOffset(0);
-			tableCopier.start();
-			rowCount = 0;
-		} else {
-			while (rowCount >= BORDER_DATASET) {
-
-		
-				TableCopier firstTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
-				TableCopier secondTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
-				TableCopier thirdTableCopierThread = new TableCopier(sourceTable, targetTable, dataContext);
-				firstTableCopierThread.setOffset(offset);
-				offset += INCREASE_OFFSET;
-				rowCount -= INCREASE_OFFSET;
-				secondTableCopierThread.setOffset(offset);
-				offset += INCREASE_OFFSET;
-				rowCount -= INCREASE_OFFSET;
-				thirdTableCopierThread.setOffset(offset);
-				offset += INCREASE_OFFSET;
-				rowCount -= INCREASE_OFFSET;
-				firstTableCopierThread.start();
-				secondTableCopierThread.start();
-				thirdTableCopierThread.start();
-				 //TODO Use Thread.join instead Thread.isAlive
-				while (firstTableCopierThread.isAlive() || secondTableCopierThread.isAlive()
-						|| thirdTableCopierThread.isAlive()) {
-					Thread.sleep(1);
-				}
-			}
-		}
-
-		if (rowCount > 0) {
-			TableCopier tableCopier = new TableCopier(sourceTable, targetTable, dataContext);
-			tableCopier.setLimit(rowCount);
-			tableCopier.setOffset(0);
-			tableCopier.start();
-		}
-
-	}
-
-	public void createTable(String target, String forgeinKey) throws Exception {
-		dataContext.executeUpdate(new UpdateScript() {
-			private String targetTable;
-			private String forgeinKey;
-
-			public void run(UpdateCallback callback) {
-				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-						targetTable + "_mat");
-
-				for (Column column : dataContext.getTableByQualifiedLabel(targetTable).getColumns()) {
-					if (!column.equals(forgeinKey)) {
-						tableCreation.withColumn(column.getName()).ofType(column.getType());
-					} else {
-						tableCreation.withColumn(column.getName()).ofType(ColumnType.MAP);
-					}
-
-				}
-
-				tableCreation.execute();
-
-			}
-
-			private UpdateScript init(String targetTable, String forgeinKey) {
-				this.forgeinKey = forgeinKey;
-				this.targetTable = targetTable;
-				return this;
-			}
-		}.init(target, forgeinKey));
-		copyTable(target, target + "_mat");
-
-	}
-
-	
-    //TODO use new function. 
-	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
-			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) throws Exception {
-		
-		Table tables = dataContext.getTableByQualifiedLabel(sourceTable + "_matComplex");
-		if (tables == null) {
+			ComplexTableUpdater updater = new ComplexTableUpdater();
+			updater.setPkSecond(pkSecondSource);
+			updater.setSecondSource(secondSourceTable);
 			/**
-			 * Create Table productfeatureproduct_mat
+			 * if(onlyID){ updater.setOnlyID(true); }
 			 **/
-			ComplexTableUpdater createTable = new ComplexTableUpdater(database, sourceTable, fkJoinTable, joinTable, secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-			createTable.setDataContext(dataContext);
-			createTable.createComplexTable(sourceTable, database, fkJoinTable);
-			
-			/**
-			 * Insert Rows
-			 */
-			int offset = 0;
-			int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
-			int startRows = rowCount;
-			if (rowCount < BORDER_DATASET) {
-				ComplexTableUpdater updater = new ComplexTableUpdater(database, sourceTable, fkJoinTable, joinTable,
-						secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-				if(onlyID){
-					updater.setOnlyID(true);
-				}
-				updater.setDataContext(dataContext);
-				updater.setLimit(rowCount);
-				updater.materializeComplexData(database, sourceTable, fkJoinTable, joinTable, secondSourceTable,
-						pkSecondSource, pkFirstSource, secondFkey);
-			} else {
-				while (rowCount >= BORDER_DATASET) {
+			updater.setDataContext(dataContext);
+			updater.setLimit(startRows - rowCount);
+			updater.compressData(joinTable, secondFkey, fkJoinTable);
 
-					ComplexTableUpdater firstUpdateThread = new ComplexTableUpdater(database, sourceTable, fkJoinTable,
-							joinTable, secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-					ComplexTableUpdater secondUpdateThread = new ComplexTableUpdater(database, sourceTable, fkJoinTable,
-							joinTable, secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-					ComplexTableUpdater thirdUpdateThread = new ComplexTableUpdater(database, sourceTable, fkJoinTable,
-							joinTable, secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-					firstUpdateThread.setDataContext(dataContext);
-					secondUpdateThread.setDataContext(dataContext);
-					thirdUpdateThread.setDataContext(dataContext);
-					firstUpdateThread.setOffset(offset);
-					offset += INCREASE_OFFSET;
-					rowCount -= INCREASE_OFFSET;
-					secondUpdateThread.setOffset(offset);
-					offset += INCREASE_OFFSET;
-					rowCount -= INCREASE_OFFSET;
-					thirdUpdateThread.setOffset(offset);
-					offset += INCREASE_OFFSET;
-					rowCount -= INCREASE_OFFSET;
-					firstUpdateThread.start();
-					secondUpdateThread.start();
-					thirdUpdateThread.start();
-					        
-					//TODO Use Thread.join instead of Thread.isAlive
-					while (firstUpdateThread.isAlive() || secondUpdateThread.isAlive() || thirdUpdateThread.isAlive()) {
-						Thread.sleep(1);
-					}
-				}
-			}
-
-			if (rowCount < 0) {
-				ComplexTableUpdater updater = new ComplexTableUpdater(database, sourceTable, fkJoinTable, joinTable,
-						secondSourceTable, pkSecondSource, pkFirstSource, secondFkey);
-				if(onlyID){
-					updater.setOnlyID(true);
-				}
-				updater.setDataContext(dataContext);
-				updater.setLimit(rowCount);
-				updater.setOffset(startRows - rowCount);
-				updater.materializeComplexData(database, sourceTable, fkJoinTable, joinTable, secondSourceTable,
-						pkSecondSource, pkFirstSource, secondFkey);
-			}
 		}
 
 	}
-
-	
-
 
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
 	}
+	
+	private void simpleUpdateWithoutTHreadRemain(String source) {
+
+		SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
+		if (onlyID) {
+			updater.setOnlyID(true);
+		}
+		updater.setDataContext(dataContext);
+		updater.setLimit(rowCount);
+		updater.setOffset(startRows - rowCount);
+		updater.updateData();
+
+	}
+	
+	private void simpleUpdateWithoutThread(String source) throws Exception {
+		int rowCount = new TableCounter().getRowNumber(dataContext, source);
+		SimpleTableUpdater updater = new SimpleTableUpdater(dataContext, source);
+		if (onlyID) {
+			updater.setOnlyID(true);
+		}
+		updater.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+		updater.setLimit(rowCount);
+		updater.updateData();
+	}
+	
+	private SimpleTableUpdater setSimpleThreadProperty(String source){
+		SimpleTableUpdater updateThread = new SimpleTableUpdater(dataContext, source);
+		updateThread.setConnection(forgeinColumn, primaryColumn, targetTable, sourceColumns);
+		if(onlyID){
+			updateThread.setOnlyID(true);
+		}
+		return updateThread;
+	}
+	
+	private void changeOffsetAndLimit(){
+		offset += INCREASE_OFFSET;
+		rowCount -= INCREASE_OFFSET;
+	}
+
+	
+	private void simpleUpdateThreads(String source) throws Exception{
+		while (rowCount >= BORDER_DATASET) {
+
+			SimpleTableUpdater firstUpdateThread = setSimpleThreadProperty(source);
+			SimpleTableUpdater secondUpdateThread =setSimpleThreadProperty(source);
+			SimpleTableUpdater thirdUpdateThread = setSimpleThreadProperty(source);
+	
+			firstUpdateThread.setOffset(offset);
+		    changeOffsetAndLimit();
+			secondUpdateThread.setOffset(offset);
+			changeOffsetAndLimit();
+			thirdUpdateThread.setOffset(offset);
+			changeOffsetAndLimit();
+			firstUpdateThread.start();
+			secondUpdateThread.start();
+			thirdUpdateThread.start();
+
+			firstUpdateThread.join();
+			secondUpdateThread.join();
+			thirdUpdateThread.join();
+		}
+	}
+
+
 
 }
