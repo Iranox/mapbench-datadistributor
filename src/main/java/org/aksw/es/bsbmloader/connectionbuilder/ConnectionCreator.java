@@ -19,8 +19,9 @@ public class ConnectionCreator {
 		
 		if (commandLine.hasOption("materializeMongo") || commandLine.hasOption("parseToMongo")) {
 			connection = new ConnectionBuilder().createConnectionProperties("mongodb");
-			connection.setConnectionProperties(commandLine.getOptionValue("hostNosql"),
-					commandLine.getOptionValue("portNosql"));
+			connection.setConnectionProperties(commandLine.getOptionValue("hostNosql"),commandLine.getOptionValue("portNosql"));
+			connection.setDatabaseName(commandLine.getOptionValue("databaseName"));
+				
 			return connection.getDB();
 		}
 
