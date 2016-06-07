@@ -2,6 +2,7 @@ package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.ExcelPath;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
+import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
 public class ExcelStarter implements Starter {
@@ -21,6 +22,11 @@ public class ExcelStarter implements Starter {
 		NoSQLParser nosql = new NoSQLParser();
 		nosql.setUpdateableDataContext(excel.getDB(commandLine.getOptionValue("excelFile")));
 		return nosql;
+	}
+
+	public DataReader createDataReader(CommandLine commandLine) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

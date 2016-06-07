@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 public class ElementParser {
+	
 	public java.util.Date getDate(Object obj) {
 		Date time = null;
 		if (obj instanceof java.sql.Date) {

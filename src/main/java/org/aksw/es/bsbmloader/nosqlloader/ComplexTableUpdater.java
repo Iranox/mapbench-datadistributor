@@ -12,9 +12,8 @@ import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
-//TODO Rename Class
 //TODO Scale Test for this class
-//TODO Implement Runnable or Extends Thread
+//TODO Implements Runnable
 public class ComplexTableUpdater extends Thread{
 
 	private UpdateableDataContext dataContext;

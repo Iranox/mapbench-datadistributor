@@ -3,6 +3,7 @@ package org.aksw.es.bsbmloader.starter;
 import org.aksw.es.bsbmloader.connectionproperties.CouchConnectionProperties;
 import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
+import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
 public class CouchStarter implements Starter{
@@ -69,6 +70,11 @@ public class CouchStarter implements Starter{
 			}
 		}
 		return nosql;
+	}
+
+	public DataReader createDataReader(CommandLine commandLine) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

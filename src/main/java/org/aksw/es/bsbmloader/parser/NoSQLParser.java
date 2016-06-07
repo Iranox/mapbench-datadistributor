@@ -13,6 +13,7 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
 import org.apache.metamodel.schema.Table;
 
+@Deprecated
 public class NoSQLParser implements Runnable {
 	protected BlockingQueue<Row> queue = null;
 	private Table table;
@@ -39,7 +40,8 @@ public class NoSQLParser implements Runnable {
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
 	}
-
+	
+    @Deprecated
 	public void createTable(Table table, Column[] column, final IQueryRewriter typ) {
 		dataContext.executeUpdate(new UpdateScript() {
 			private Table table;
@@ -90,7 +92,7 @@ public class NoSQLParser implements Runnable {
 
 	}
 	
-
+    @Deprecated
 	public void deleteDatabase(String name) {
 		dataContext.executeUpdate(new UpdateScript() {
 			private String name;

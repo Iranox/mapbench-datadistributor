@@ -4,6 +4,7 @@ import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
 import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
 import org.aksw.es.bsbmloader.nosqlloader.ComplexTableUpdater;
 import org.aksw.es.bsbmloader.parser.NoSQLParser;
+import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
 public class MongoStarter implements Starter {
@@ -89,6 +90,11 @@ public class MongoStarter implements Starter {
 		}
 		
 		return nosql;
+	}
+
+	public DataReader createDataReader(CommandLine commandLine) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

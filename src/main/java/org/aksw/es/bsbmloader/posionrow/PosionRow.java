@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.parser;
+package org.aksw.es.bsbmloader.posionrow;
 
 import org.apache.metamodel.data.DataSetHeader;
 import org.apache.metamodel.data.Row;
