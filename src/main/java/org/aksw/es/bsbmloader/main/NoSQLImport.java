@@ -62,6 +62,7 @@ public class NoSQLImport {
 			executor.execute(createDataWriter(table));
 			executor.execute(createDataWriter(table));
 			executor.shutdown();
+//			executor.awaitTermination(Long.MAX_VALUE, Unit.)
 		}
 		
 	}
@@ -78,6 +79,7 @@ public class NoSQLImport {
 	private DataWriter createDataWriter(Table table) throws Exception{
 		DataWriter dataWriter = new DataWriter();
 		dataWriter.setQueue(queue);
+		dataWriter.setTable(table);
 		dataWriter.setUpdateableDataContext(datacontextTarget);
 		return dataWriter;
 	}
