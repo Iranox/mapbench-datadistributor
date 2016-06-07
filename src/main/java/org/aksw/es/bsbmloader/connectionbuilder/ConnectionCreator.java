@@ -10,7 +10,7 @@ public class ConnectionCreator {
 	
 	public UpdateableDataContext createConnection(CommandLine commandLine, String type) throws Exception {
 		ConnectionDatabase connection = null;
-		if (type.equals("mysql")) {
+		if (type != null && type.equals("mysql")) {
 			connection = new ConnectionBuilder().createConnectionProperties("mysql");
 			connection.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
 					commandLine.getOptionValue("p"));
