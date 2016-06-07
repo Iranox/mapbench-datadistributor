@@ -53,7 +53,8 @@ public class NoSQLImport {
 
 	}
 	
-	public void importToTarget() throws Exception{
+	public void importToTarget(CommandLine commandLine) throws Exception{
+		createTargetTables(commandLine);
 		queue = new ArrayBlockingQueue<Row>(BORDER);
 		for(Table table : datacontextSource.getSchemaByName(databaseName).getTables()){
 			ExecutorService executor = Executors.newCachedThreadPool();

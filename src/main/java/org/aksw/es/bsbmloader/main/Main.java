@@ -142,8 +142,8 @@ public class Main {
 		NoSQLImport importNosql = new NoSQLImport();
 		importNosql.setDatabaseName(commandLine.getOptionValue("databaseName"));
 		importNosql.createDataContext(commandLine);
-		importNosql.createTargetTables(commandLine);
-		importNosql.importToTarget();
+//		importNosql.createTargetTables(commandLine);
+		importNosql.importToTarget(commandLine);
 		
 
 		log.info("Done");

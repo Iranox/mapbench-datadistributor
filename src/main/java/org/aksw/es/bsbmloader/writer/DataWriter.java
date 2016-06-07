@@ -3,6 +3,7 @@ package org.aksw.es.bsbmloader.writer;
 import java.util.concurrent.BlockingQueue;
 
 import org.aksw.es.bsbmloader.parser.ElementParser;
+import org.apache.hadoop.hbase.protobuf.generated.ClientProtos.Column;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
