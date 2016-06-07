@@ -12,15 +12,19 @@ import org.apache.metamodel.schema.Table;
 
 public class TableCreator {
 	private UpdateableDataContext dataContext;
-	private Table tables[];
+	private Table table;
 	private final int NUMBER = 3000;
 
-	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
-		this.dataContext = dc;
+	public UpdateableDataContext getDataContext() {
+		return dataContext;
 	}
 
-	public void createTable(Table table[], final IQueryRewriter typ) {
-		this.tables = table;
+	public void setDataContext(UpdateableDataContext dataContext) {
+		this.dataContext = dataContext;
+	}
+
+	public void createTable(Table table, final IQueryRewriter typ) {
+		this.table = table;
 		UpdateScript script = null;
 		if (typ == null) {
 			script = updateScript();
@@ -42,18 +46,17 @@ public class TableCreator {
 		UpdateScript updateScript = new UpdateScript() {
 
 			public void run(UpdateCallback callback) {
-				for (Table table : tables) {
-					TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-							table.getName());
-					for (Column column : table.getColumns()) {
-						if (column.getType().isLiteral()) {
-							tableCreation.withColumn(column.getName()).ofType(column.getType());
-						} else {
-							tableCreation.withColumn(column.getName()).ofType(column.getType());
-						}
+
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+						table.getName());
+				for (Column column : table.getColumns()) {
+					if (column.getType().isLiteral()) {
+						tableCreation.withColumn(column.getName()).ofType(column.getType());
+					} else {
+						tableCreation.withColumn(column.getName()).ofType(column.getType());
 					}
-					tableCreation.execute();
 				}
+				tableCreation.execute();
 
 			}// run function
 		};
@@ -65,27 +68,25 @@ public class TableCreator {
 		UpdateScript updateScript = new UpdateScript() {
 
 			public void run(UpdateCallback callback) {
-				for (Table table : tables) {
-					TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-							table.getName());
-					for (Column column : table.getColumns()) {
-						if (column.getType().isLiteral()) {
-							if (column.getColumnSize() < NUMBER) {
-								tableCreation.withColumn(column.getName())
-										.ofNativeType(typ.rewriteColumnType(column.getType(), column.getColumnSize()));
-							} else {
-								tableCreation.withColumn(column.getName())
-										.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
-							}
+
+				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+						table.getName());
+				for (Column column : table.getColumns()) {
+					if (column.getType().isLiteral()) {
+						if (column.getColumnSize() < NUMBER) {
+							tableCreation.withColumn(column.getName())
+									.ofNativeType(typ.rewriteColumnType(column.getType(), column.getColumnSize()));
 						} else {
 							tableCreation.withColumn(column.getName())
-									.ofNativeType(typ.rewriteColumnType(column.getType(), null));
-
+									.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
 						}
-					}
-					tableCreation.execute();
-				}
+					} else {
+						tableCreation.withColumn(column.getName())
+								.ofNativeType(typ.rewriteColumnType(column.getType(), null));
 
+					}
+				}
+				tableCreation.execute();
 			}
 
 		};

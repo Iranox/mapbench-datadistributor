@@ -23,9 +23,7 @@ public class NoSQLImport {
 	private UpdateableDataContext datacontextTarget = null;
 	private final int BORDER = 1000;
 	private String databaseName;
-	private BlockingQueue<Row> queue ;
-	
-	
+	private BlockingQueue<Row> queue;
 
 	public void setDatabaseName(String databaseName) {
 		this.databaseName = databaseName;
@@ -35,51 +33,59 @@ public class NoSQLImport {
 		if (commandLine.hasOption("urlMysql")) {
 			datacontextSource = new ConnectionCreator().createConnection(commandLine, "mysql");
 		}
+
+	}
+
+	public void createDataContextTarget(CommandLine commandLine) throws Exception {
 		datacontextTarget = new ConnectionCreator().createConnection(commandLine, null);
 	}
-	
-// TODO rename
+
+	// TODO rename
 	public void createTargetTables(CommandLine commandLine) throws Exception {
 		TableReader tableReader = new TableReader();
 		tableReader.setDataContext(datacontextSource);
 		Table[] tables = tableReader.getTables(databaseName);
-		TableCreator tableCreator = new TableCreator();
-		tableCreator.setUpdateableDataContext(datacontextTarget);
-		if (!commandLine.hasOption("targetUrl")) {
-			tableCreator.createTable(tables, null);
-		} else {
-			tableCreator.createTable(tables, getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
+		for (Table table : tables) {
+			TableCreator tableCreator = new TableCreator();
+			tableCreator.setDataContext(datacontextTarget);
+			if (!commandLine.hasOption("targetUrl")) {
+				tableCreator.createTable(table, null);
+			} else {
+				tableCreator.createTable(table, getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
+			}
+//			importToTarget(commandLine);
+			datacontextTarget = tableCreator.getDataContext();
+
 		}
 
 	}
-	
-	public void importToTarget(CommandLine commandLine) throws Exception{
-		createTargetTables(commandLine);
+
+	public void importToTarget(CommandLine commandLine) throws Exception {
+//		createTargetTables(commandLine);
 		queue = new ArrayBlockingQueue<Row>(BORDER);
-		for(Table table : datacontextSource.getSchemaByName(databaseName).getTables()){
+		for (Table table : datacontextSource.getSchemaByName(databaseName).getTables()) {
 			ExecutorService executor = Executors.newCachedThreadPool();
 			executor.execute(createDataReader(table));
 			executor.execute(createDataWriter(table));
 			executor.execute(createDataWriter(table));
 			executor.execute(createDataWriter(table));
 			executor.shutdown();
-//			executor.awaitTermination(Long.MAX_VALUE, Unit.)
+			// executor.awaitTermination(Long.MAX_VALUE, Unit.)
 		}
-		
+
 	}
-	
+
 	private DataReader createDataReader(Table table) throws Exception {
 		DataReader dataReader = new DataReader();
 		dataReader.setDataContext(datacontextSource);
 		dataReader.setQueue(queue);
 		dataReader.setTable(table);
 		return dataReader;
-	
+
 	}
-	
-	private DataWriter createDataWriter(Table table) throws Exception{
+
+	private DataWriter createDataWriter(Table table) throws Exception {
 		DataWriter dataWriter = new DataWriter();
-		datacontextTarget.refreshSchemas();
 		dataWriter.setQueue(queue);
 		dataWriter.setTable(table);
 		dataWriter.setUpdateableDataContext(datacontextTarget);
@@ -97,6 +103,5 @@ public class NoSQLImport {
 
 		return null;
 	}
-
 
 }
