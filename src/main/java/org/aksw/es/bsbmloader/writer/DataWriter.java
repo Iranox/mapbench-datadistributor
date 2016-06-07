@@ -1,7 +1,7 @@
 package org.aksw.es.bsbmloader.writer;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 
 import org.aksw.es.bsbmloader.parser.ElementParser;
 import org.apache.metamodel.UpdateCallback;
@@ -12,11 +12,18 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Table;
 
-public class DataWriter implements Callable<Integer> {
+public class DataWriter implements Runnable {
 	private BlockingQueue<Row> queue = null;
 	private UpdateableDataContext dataContext;
 	private Row row;
 	private Table table;
+	private CountDownLatch latch;
+	
+
+
+	public void setLatch(CountDownLatch latch) {
+		this.latch = latch;
+	}
 
 	public void setQueue(BlockingQueue<Row> queue) {
 		this.queue = queue;
@@ -70,22 +77,13 @@ public class DataWriter implements Callable<Integer> {
 	public void run() {
 		try {
 			insertData();
+			latch.countDown();
 		  
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public Integer call() throws Exception {
-		
-			try {
-				insertData();
-			  
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		return 0;
-	}
 
 
 

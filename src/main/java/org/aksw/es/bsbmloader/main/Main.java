@@ -1,10 +1,7 @@
 package org.aksw.es.bsbmloader.main;
 
 
-
-
 import org.aksw.es.bsbmloader.database.DatabaseBuilder;
-import org.aksw.es.bsbmloader.reader.TableReader;
 import org.aksw.es.bsbmloader.starter.Starter;
 import org.aksw.es.bsbmloader.starter.StarterFactory;
 import org.apache.commons.cli.BasicParser;

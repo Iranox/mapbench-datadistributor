@@ -1,7 +1,7 @@
 package org.aksw.es.bsbmloader.reader;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 
 import org.aksw.es.bsbmloader.posionrow.PosionRow;
 import org.apache.log4j.Logger;
@@ -10,13 +10,20 @@ import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Table;
 
-public class DataReader implements Callable<Integer> {
+public class DataReader implements Runnable {
 	private DataContext dataContext;
 	private BlockingQueue<Row> queue = null;
 	private Table table;
 	private int offset = 0;
 	private int limit = 0;
 	private static org.apache.log4j.Logger log = Logger.getLogger(DataReader.class);
+	private CountDownLatch latch;
+	
+	
+	
+	public void setLatch(CountDownLatch latch) {
+		this.latch = latch;
+	}
 
 	public void setOffset(int offset) {
 		this.offset = offset;
@@ -68,6 +75,7 @@ public class DataReader implements Callable<Integer> {
 	public void run() {
 		try {
 			readData();
+			latch.countDown();
 		} catch (Exception e) {
 
 			log.error(e);
@@ -75,14 +83,6 @@ public class DataReader implements Callable<Integer> {
 
 	}
 
-	public Integer call() throws Exception {
-		try {
-			readData();
-		} catch (Exception e) {
 
-			log.error(e);
-		}
-		return 0;
-	}
 
 }
