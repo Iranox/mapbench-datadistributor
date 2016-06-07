@@ -79,6 +79,7 @@ public class NoSQLImport {
 	
 	private DataWriter createDataWriter(Table table) throws Exception{
 		DataWriter dataWriter = new DataWriter();
+		datacontextTarget.refreshSchemas();
 		dataWriter.setQueue(queue);
 		dataWriter.setTable(table);
 		dataWriter.setUpdateableDataContext(datacontextTarget);
