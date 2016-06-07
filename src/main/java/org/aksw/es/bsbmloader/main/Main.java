@@ -4,6 +4,7 @@ package org.aksw.es.bsbmloader.main;
 
 
 import org.aksw.es.bsbmloader.database.DatabaseBuilder;
+import org.aksw.es.bsbmloader.reader.TableReader;
 import org.aksw.es.bsbmloader.starter.Starter;
 import org.aksw.es.bsbmloader.starter.StarterFactory;
 import org.apache.commons.cli.BasicParser;
@@ -142,8 +143,8 @@ public class Main {
 		NoSQLImport importNosql = new NoSQLImport();
 		importNosql.setDatabaseName(commandLine.getOptionValue("databaseName"));
 		importNosql.createDataContext(commandLine);
-//		importNosql.createTargetTables(commandLine);
-		importNosql.importToTarget(commandLine);
+		importNosql.createDataContextTarget(commandLine);
+		importNosql.startImport(commandLine);
 		
 
 		log.info("Done");

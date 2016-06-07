@@ -1,9 +1,9 @@
 package org.aksw.es.bsbmloader.writer;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 
 import org.aksw.es.bsbmloader.parser.ElementParser;
-import org.apache.hadoop.hbase.protobuf.generated.ClientProtos.Column;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
@@ -12,7 +12,7 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Table;
 
-public class DataWriter implements Runnable {
+public class DataWriter implements Callable<Integer> {
 	private BlockingQueue<Row> queue = null;
 	private UpdateableDataContext dataContext;
 	private Row row;
@@ -37,6 +37,8 @@ public class DataWriter implements Runnable {
 		while ((row = queue.take()) != null) {
 			if (row.size() > 0) {
 				dataContext.executeUpdate(insertScript());
+			}else{
+				return;
 			}
 		}
 	}
@@ -68,9 +70,23 @@ public class DataWriter implements Runnable {
 	public void run() {
 		try {
 			insertData();
+		  
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+
+	public Integer call() throws Exception {
+		
+			try {
+				insertData();
+			  
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		return 0;
+	}
+
+
 
 }

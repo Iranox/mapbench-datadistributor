@@ -1,7 +1,12 @@
 package org.aksw.es.bsbmloader.main;
 
+
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,6 +22,8 @@ import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
 import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
 import org.apache.metamodel.jdbc.dialects.PostgresqlQueryRewriter;
 import org.apache.metamodel.schema.Table;
+
+
 
 public class NoSQLImport {
 	private UpdateableDataContext datacontextSource = null;
@@ -39,38 +46,41 @@ public class NoSQLImport {
 	public void createDataContextTarget(CommandLine commandLine) throws Exception {
 		datacontextTarget = new ConnectionCreator().createConnection(commandLine, null);
 	}
-
-	// TODO rename
-	public void createTargetTables(CommandLine commandLine) throws Exception {
+	
+	public void startImport(CommandLine line) throws Exception{
 		TableReader tableReader = new TableReader();
 		tableReader.setDataContext(datacontextSource);
-		Table[] tables = tableReader.getTables(databaseName);
-		for (Table table : tables) {
-			TableCreator tableCreator = new TableCreator();
-			tableCreator.setDataContext(datacontextTarget);
-			if (!commandLine.hasOption("targetUrl")) {
-				tableCreator.createTable(table, null);
-			} else {
-				tableCreator.createTable(table, getIQueryRewriter(commandLine.getOptionValue("targetUrl")));
-			}
-//			importToTarget(commandLine);
-			datacontextTarget = tableCreator.getDataContext();
-
+		for(Table table : tableReader.getTables(databaseName)){
+			createTargetTables(line, table);
+			importToTarget();
 		}
+	}
+
+	// TODO rename
+	public void createTargetTables(CommandLine commandline, Table table) throws Exception {
+		TableCreator tableCreator = new TableCreator();
+		tableCreator.setDataContext(datacontextTarget);
+		if (!commandline.hasOption("targetUrl")) {
+			tableCreator.createTable(table, null);
+		} else {
+			tableCreator.createTable(table,
+					getIQueryRewriter(commandline.getOptionValue("targetUrl")));
+		}
+		datacontextTarget = tableCreator.getDataContext();
 
 	}
 
-	public void importToTarget(CommandLine commandLine) throws Exception {
-//		createTargetTables(commandLine);
+	public void importToTarget() throws Exception {
+		// createTargetTables(commandLine);
 		queue = new ArrayBlockingQueue<Row>(BORDER);
 		for (Table table : datacontextSource.getSchemaByName(databaseName).getTables()) {
-			ExecutorService executor = Executors.newCachedThreadPool();
-			executor.execute(createDataReader(table));
-			executor.execute(createDataWriter(table));
-			executor.execute(createDataWriter(table));
-			executor.execute(createDataWriter(table));
+			ExecutorService executor = Executors.newFixedThreadPool(4);
+			List<Callable<Integer>> tasks = new LinkedList<Callable<Integer>>();
+			tasks.add(createDataWriter(table));
+			executor.submit(createDataReader(table));
+		    executor.invokeAll(tasks);
+		
 			executor.shutdown();
-			// executor.awaitTermination(Long.MAX_VALUE, Unit.)
 		}
 
 	}

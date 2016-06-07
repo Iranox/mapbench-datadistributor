@@ -46,17 +46,20 @@ public class TableCreator {
 		UpdateScript updateScript = new UpdateScript() {
 
 			public void run(UpdateCallback callback) {
-
-				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-						table.getName());
-				for (Column column : table.getColumns()) {
-					if (column.getType().isLiteral()) {
-						tableCreation.withColumn(column.getName()).ofType(column.getType());
-					} else {
-						tableCreation.withColumn(column.getName()).ofType(column.getType());
+				TableCreationBuilder tableCreation = null;
+				
+					tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
+					for (Column column : table.getColumns()) {
+						if (column.getType().isLiteral()) {
+							tableCreation.withColumn(column.getName()).ofType(column.getType());
+						} else {
+							tableCreation.withColumn(column.getName()).ofType(column.getType());
+						}
 					}
-				}
-				tableCreation.execute();
+					tableCreation.execute();
+
+				
+				
 
 			}// run function
 		};
@@ -69,24 +72,27 @@ public class TableCreator {
 
 			public void run(UpdateCallback callback) {
 
-				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
-						table.getName());
-				for (Column column : table.getColumns()) {
-					if (column.getType().isLiteral()) {
-						if (column.getColumnSize() < NUMBER) {
-							tableCreation.withColumn(column.getName())
-									.ofNativeType(typ.rewriteColumnType(column.getType(), column.getColumnSize()));
+			
+					TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
+							table.getName());
+					for (Column column : table.getColumns()) {
+						if (column.getType().isLiteral()) {
+							if (column.getColumnSize() < NUMBER) {
+								tableCreation.withColumn(column.getName())
+										.ofNativeType(typ.rewriteColumnType(column.getType(), column.getColumnSize()));
+							} else {
+								tableCreation.withColumn(column.getName()).ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
+							}
 						} else {
 							tableCreation.withColumn(column.getName())
-									.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
-						}
-					} else {
-						tableCreation.withColumn(column.getName())
-								.ofNativeType(typ.rewriteColumnType(column.getType(), null));
+									.ofNativeType(typ.rewriteColumnType(column.getType(), null));
 
-					}
+						}
+					
+					tableCreation.execute();
 				}
-				tableCreation.execute();
+
+			
 			}
 
 		};

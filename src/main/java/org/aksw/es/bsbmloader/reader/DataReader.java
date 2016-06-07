@@ -1,6 +1,7 @@
 package org.aksw.es.bsbmloader.reader;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 
 import org.aksw.es.bsbmloader.posionrow.PosionRow;
 import org.apache.log4j.Logger;
@@ -9,7 +10,7 @@ import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Table;
 
-public class DataReader implements Runnable {
+public class DataReader implements Callable<Integer> {
 	private DataContext dataContext;
 	private BlockingQueue<Row> queue = null;
 	private Table table;
@@ -56,6 +57,8 @@ public class DataReader implements Runnable {
 		table = dataContext.getTableByQualifiedLabel(table.getName());
 		DataSet dataSet = createDataSet();
 		while (dataSet.next()) {
+                        Row row = dataSet.getRow();
+                        row.getSelectItems();
 			queue.put(dataSet.getRow());
 		}
 		dataSet.close();
@@ -70,6 +73,16 @@ public class DataReader implements Runnable {
 			log.error(e);
 		}
 
+	}
+
+	public Integer call() throws Exception {
+		try {
+			readData();
+		} catch (Exception e) {
+
+			log.error(e);
+		}
+		return 0;
 	}
 
 }
