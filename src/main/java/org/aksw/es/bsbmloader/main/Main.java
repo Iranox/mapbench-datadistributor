@@ -1,7 +1,6 @@
 package org.aksw.es.bsbmloader.main;
 
 
-import org.aksw.es.bsbmloader.database.DatabaseBuilder;
 import org.aksw.es.bsbmloader.starter.Starter;
 import org.aksw.es.bsbmloader.starter.StarterFactory;
 import org.apache.commons.cli.BasicParser;
@@ -32,16 +31,7 @@ public class Main {
 				formater.printHelp("Parameter", getOption());
 			}
 
-			if (commandLine.hasOption("importToMysql") && hasMySQLConnectionProperties(commandLine)) {
-				if (!commandLine.hasOption("file")) {
-					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
-							commandLine.getOptionValue("urlMysql"));
-				} else {
-					startIntDatabase(commandLine.getOptionValue("u"), commandLine.getOptionValue("p"),
-							commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("file"));
-				}
 
-			}
 
 			interpretCommandLine(commandLine);
 
@@ -122,17 +112,7 @@ public class Main {
 		}
 	}
 
-	private static void startIntDatabase(String username, String password, String url) throws Exception {
-		DatabaseBuilder db = new DatabaseBuilder();
-		db.setConnectionProperties(url, username, password);
-		db.initBSBMDatabase();
-	}
 
-	private static void startIntDatabase(String username, String password, String url, String path) throws Exception {
-		DatabaseBuilder db = new DatabaseBuilder();
-		db.setConnectionProperties(url, username, password);
-		db.initBSBMDatabase(path);
-	}
 	
 	private static void startParseToNoSQL(CommandLine commandLine) throws Exception {
 		log.info("Start Parse to NoSQL/JDBC");
