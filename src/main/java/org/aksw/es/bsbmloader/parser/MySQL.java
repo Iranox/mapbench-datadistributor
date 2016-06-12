@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.concurrent.BlockingQueue;
 
-import org.aksw.es.bsbmloader.posionrow.PosionRow;
+
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.DataContextFactory;
@@ -78,9 +78,9 @@ public class MySQL implements Runnable{
 			}
 		  
 			dataSet.close();
-			queue.put(new PosionRow().getPosion());
-			queue.put(new PosionRow().getPosion());
-			queue.put(new PosionRow().getPosion());
+//			queue.put(new PosionRow().getPosion());
+//			queue.put(new PosionRow().getPosion());
+//			queue.put(new PosionRow().getPosion());
 			closeConnection();
 		} catch(Exception e){
 			log.info(e);
