@@ -1,26 +1,37 @@
 package org.aksw.es.bsbmloader.connectionbuilder;
 
 
-
-import org.apache.commons.cli.CommandLine;
 import org.apache.metamodel.UpdateableDataContext;
 
 
 public class ConnectionCreator {
 	
-	public UpdateableDataContext createConnection(CommandLine commandLine, String type) throws Exception {
+//	startImport("mongodb");
+	
+	public UpdateableDataContext createConnection(String url,String user, String password, String type) throws Exception {
 		ConnectionDatabase connection = null;
-		if (type != null && type.equals("mysql")) {
+		if (url != null && url.contains("mysql")) {
 			connection = new ConnectionBuilder().createConnectionProperties("mysql");
-			connection.setConnectionProperties(commandLine.getOptionValue("urlMysql"), commandLine.getOptionValue("u"),
-					commandLine.getOptionValue("p"));
+			connection.setConnectionProperties(url, user,
+					password);
 			return connection.getDB();
 		}
 		
-		if (commandLine.hasOption("materializeMongo") || commandLine.hasOption("parseToMongo")) {
+		return null;
+	}
+	
+	public UpdateableDataContext createConnection(String url,String user, String password,String database, String type) throws Exception {
+		ConnectionDatabase connection = null;
+		
+		String urlAttribute[] = url.split(":");
+		String port = urlAttribute[1];
+		String host = urlAttribute[0];
+		
+		
+		if (type.equals("mongodb")) {
 			connection = new ConnectionBuilder().createConnectionProperties("mongodb");
-			connection.setConnectionProperties(commandLine.getOptionValue("hostNosql"),commandLine.getOptionValue("portNosql"));
-			connection.setDatabaseName(commandLine.getOptionValue("databaseName"));
+			connection.setConnectionProperties(host,port);
+			connection.setDatabaseName(database);
 				
 			return connection.getDB();
 		}

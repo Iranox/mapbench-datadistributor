@@ -1,49 +1,99 @@
 package org.aksw.es.bsbmloader.main;
 
 
-import org.aksw.es.bsbmloader.starter.Starter;
-import org.aksw.es.bsbmloader.starter.StarterFactory;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
+
 import org.apache.log4j.Logger;
-import org.apache.commons.cli.CommandLine;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+
 
 public class Main {
 	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
+	
+	/**
 
-	public static void main(String[] args) {
+	options.addOption("target", true, "The target table with the forgein key");
+	options.addOption("source", true, "The source table with the primary key");
+	options.addOption("fk", "forgeinKey", true, "The forgein key");
+	options.addOption("pk", "primayKey", true, "The primary key");
+	options.addOption("join", true, "The join table with the forgein key");
+	options.addOption("fkJoinTable", true, "The forgeinkey of the join table");
+	options.addOption("secondSource", true, "The secound source table");
+	options.addOption("pkSecond", true, "The primary key of the second table");
+	options.addOption("secondFkey", true, "The second key of the join table");
+    options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
+	options.addOption("materializeCouch", false, "Materialize a N to One Relationship in MongoDB");
+	options.addOption("materializeElastic", false, "Materialize a N to One Relationship in Mon
+	options.addOption("objectId", false, "use only ObjectId"); **/
+	
+	@Parameter(names= {"-delete"}, description = "url of the target database")
+	private boolean delete = false;
+	
+	@Parameter(names= {"-importCouch"}, description = "url of the target database")
+	private boolean importCouchdb = false;
+	
+	@Parameter(names= {"-couchPassword"}, description = "password")
+	private String couchPassword;
+	
+	@Parameter(names= {"-importJdbc"}, description = "url of the target database")
+	private boolean importJdbc = false;
+	
+	@Parameter(names= {"-importElastic"}, description = "url of the target database")
+	private boolean importEleastic = false;
+	
+	@Parameter(names= {"-importExcel"}, description = "url of the target database")
+	private boolean importExcel = false;
+	
+	@Parameter(names= {"-couchUser"}, description = "user name")
+	private String couchUser;
+	
+	@Parameter(names= {"-importMongo"}, description = "url of the target database")
+	private boolean importMongodb = false;
+	
+	@Parameter(names= {"-targetUrl"}, description = "url of the target database")
+	private String targetUrl;
 
-		CommandLineParser parser = new BasicParser();
-
-		try {
-			CommandLine commandLine = parser.parse(getOption(), args);
-			
-			if (commandLine.getArgs() == null) {
-				HelpFormatter formater = new HelpFormatter();
-				formater.printHelp("Parameter", getOption());
-
-			}
-			
-			if (commandLine.hasOption("h")) {
-				HelpFormatter formater = new HelpFormatter();
-				formater.printHelp("Parameter", getOption());
-			}
-
-
-
-			interpretCommandLine(commandLine);
-
-			
-
-		} catch (Exception e) {
-			log.error("", e);
-		}
-
+	@Parameter(names= {"-sourceUrl"}, description = "url of the source database")
+	private String sourceUrl;
+	
+	@Parameter(names= {"-database"}, description = "database")
+	private String databaseName;
+	
+	@Parameter(names= {"-user"}, description = "user name")
+	private String user;
+	
+	@Parameter(names= {"-password"}, description = "password")
+	private String password;
+	
+	
+	
+	public static void main(String[] args) throws Exception {
+		
+		Main main = new Main();
+		new JCommander(main, args);
+		main.interpretCommandLine();
+		
 	}
+	
+	public void  interpretCommandLine() throws Exception{
+		if(importMongodb){
+			log.info("Import to MongoDB");
+			startImport("mongodb");
+		}
+		
+	}
+	
+	private void startImport(String type) throws Exception{
+		NoSQLImport importNosql = new NoSQLImport();
+		importNosql.setDatabaseName(databaseName);
+		importNosql.createDataContext(sourceUrl, user, password);;
+		importNosql.createDataContextTarget(targetUrl, user, password,type);;
+		importNosql.startImport();
+	}
+	
 	//TODO 	restructuring function 
-	private static void interpretCommandLine(CommandLine commandLine) throws Exception{
+/**	private static void interpretCommandLine(CommandLine commandLine) throws Exception{
 		Starter starter = new StarterFactory().getStarter(commandLine);
 
 		if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
@@ -110,75 +160,7 @@ public class Main {
 
 			}
 		}
-	}
+	} **/
 
-
-	
-	private static void startParseToNoSQL(CommandLine commandLine) throws Exception {
-		log.info("Start Parse to NoSQL/JDBC");
-		
-		NoSQLImport importNosql = new NoSQLImport();
-		importNosql.setDatabaseName(commandLine.getOptionValue("databaseName"));
-		importNosql.createDataContext(commandLine);
-		importNosql.createDataContextTarget(commandLine);
-		importNosql.startImport(commandLine);
-		
-
-		log.info("Done");
-	}
-	//TODO 	restructuring function 
-	private static Options getOption() {
-		Options options = new Options();
-		options.addOption("h", "help", false, "Show help");
-		options.addOption("importToMysql", false, "Start to import the data to MySQL");
-		options.addOption("u", "userMysql", true, "The username in MySQL");
-		options.addOption("p", "passwordMysql", true, "The password in MySQL");
-		options.addOption("urlMysql", true, "The jdbc-url for MySQL. For example: jdbc:mysql://localhost/benchmark");
-		options.addOption("portNosql", true, "The username in MongoDB");
-		options.addOption("hostNosql", true, "the password in MongoDB");
-		options.addOption("parseToMongo", false, "Start to parse the MySQl databaste to a MongoDB database");
-		options.addOption("file", true, "Use your BSBM sqlfiles");
-		options.addOption("d", "deleteDatabase", false, "Delete an existing NoSQL Database");
-		options.addOption("databaseName", true, "Set the name of the NoSQL database");
-		options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
-		options.addOption("target", true, "The target table with the forgein key");
-		options.addOption("source", true, "The source table with the primary key");
-		options.addOption("fk", "forgeinKey", true, "The forgein key");
-		options.addOption("pk", "primayKey", true, "The primary key");
-		options.addOption("join", true, "The join table with the forgein key");
-		options.addOption("parseToCouch", false, "Import the mysql databaste to couchdb");
-		options.addOption("fkJoinTable", true, "The forgeinkey of the join table");
-		options.addOption("secondSource", true, "The secound source table");
-		options.addOption("pkSecond", true, "The primary key of the second table");
-		options.addOption("secondFkey", true, "The second key of the join table");
-		options.addOption("passwordCouch", true, "The host for CouchDB");
-		options.addOption("userCouch", true, "The host for CouchDB");
-		options.addOption("materializeCouch", false, "Materialize a N to One Relationship in MongoDB");
-		options.addOption("materializeElastic", false, "Materialize a N to One Relationship in MongoDB");
-		options.addOption("parseToExcel", false, "Import the mysql databaste to Excel");
-		options.addOption("parseToElastic", false, "Import the mysql databaste to Excel");
-		options.addOption("excelFile", true, "Use your BSBM sqlfiles");
-		options.addOption("targetUrl",true,"Url of target jdbc");
-		options.addOption("user", true, "username");
-		options.addOption("password", true, "password");
-		options.addOption("parseToJdbc", false, "Import the mysql databaste to JDBC");
-		options.addOption("objectId", false, "use only ObjectId");
-		
-		return options;
-
-	}
-	
-
-	private static boolean hasMySQLConnectionProperties(CommandLine commandLine) throws Exception {
-		boolean hasProperties = false;
-
-		if (commandLine.hasOption("u") && commandLine.hasOption("urlMysql")) {
-			hasProperties = true;
-		} else {
-			throw new Exception("Missing parameter");
-		}
-
-		return hasProperties;
-	}
 
 }

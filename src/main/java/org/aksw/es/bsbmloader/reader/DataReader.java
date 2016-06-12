@@ -3,7 +3,6 @@ package org.aksw.es.bsbmloader.reader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
-
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.data.DataSet;
@@ -20,9 +19,7 @@ public class DataReader implements Runnable {
 	private static org.apache.log4j.Logger log = Logger.getLogger(DataReader.class);
 	private CountDownLatch latch;
 	final static DefaultRow POSIONROW = null;
-	
-	
-	
+
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
 	}
@@ -52,12 +49,13 @@ public class DataReader implements Runnable {
 		queue.put(POSIONROW);
 		queue.put(POSIONROW);
 	}
+	
 
 	private DataSet createDataSet() {
 		if (limit == 0) {
 			return dataContext.query().from(table).selectAll().execute();
 		}
-		
+
 		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).execute();
 
 	}
@@ -66,8 +64,8 @@ public class DataReader implements Runnable {
 		table = dataContext.getTableByQualifiedLabel(table.getName());
 		DataSet dataSet = createDataSet();
 		while (dataSet.next()) {
-                        Row row = dataSet.getRow();
-                        row.getSelectItems();
+			Row row = dataSet.getRow();
+			row.getSelectItems();
 			queue.put(dataSet.getRow());
 		}
 		dataSet.close();
@@ -84,7 +82,5 @@ public class DataReader implements Runnable {
 		}
 
 	}
-
-
 
 }

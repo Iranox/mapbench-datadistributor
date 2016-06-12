@@ -11,7 +11,7 @@ import org.aksw.es.bsbmloader.reader.DataReader;
 import org.aksw.es.bsbmloader.reader.TableReader;
 import org.aksw.es.bsbmloader.writer.DataWriter;
 import org.aksw.es.bsbmloader.writer.TableCreator;
-import org.apache.commons.cli.CommandLine;
+
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
@@ -31,35 +31,27 @@ public class NoSQLImport {
 		this.databaseName = databaseName;
 	}
 
-	public void createDataContext(CommandLine commandLine) throws Exception {
-		if (commandLine.hasOption("urlMysql")) {
-			datacontextSource = new ConnectionCreator().createConnection(commandLine, "mysql");
-		}
-
+	public void createDataContext(String url,String user, String password) throws Exception {
+			datacontextSource = new ConnectionCreator().createConnection(url, user, password, null, "mysql");
 	}
 
-	public void createDataContextTarget(CommandLine commandLine) throws Exception {
-		datacontextTarget = new ConnectionCreator().createConnection(commandLine, null);
+	public void createDataContextTarget(String url,String user, String password, String type) throws Exception {
+		datacontextTarget = new ConnectionCreator().createConnection(url, user, password, null, type);
 	}
 
-	public void startImport(CommandLine line) throws Exception {
-		TableReader tableReader = new TableReader();
-		tableReader.setDataContext(datacontextSource);
+	public void startImport() throws Exception {
+		TableReader tableReader = new TableReader(datacontextSource);
 		for (Table table : tableReader.getTables(databaseName)) {
-			createTargetTables(line, table);
+			createTargetTables(table);
 			importToTarget(table);
 		}
 	}
 
 	// TODO rename
-	public void createTargetTables(CommandLine commandline, Table table) throws Exception {
+	public void createTargetTables(Table table) throws Exception {
 		TableCreator tableCreator = new TableCreator();
 		tableCreator.setDataContext(datacontextTarget);
-		if (!commandline.hasOption("targetUrl")) {
-			tableCreator.createTable(table, null);
-		} else {
-			tableCreator.createTable(table, getIQueryRewriter(commandline.getOptionValue("targetUrl")));
-		}
+		tableCreator.createTable(table, null);
 		datacontextTarget = tableCreator.getDataContext();
 
 	}
