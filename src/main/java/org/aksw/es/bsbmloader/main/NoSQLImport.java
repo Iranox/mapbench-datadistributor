@@ -32,11 +32,11 @@ public class NoSQLImport {
 	}
 
 	public void createDataContext(String url,String user, String password) throws Exception {
-			datacontextSource = new ConnectionCreator().createConnection(url, user, password, null, "mysql");
+			datacontextSource = new ConnectionCreator().createConnection(url, user, password, null);
 	}
 
 	public void createDataContextTarget(String url,String user, String password, String type) throws Exception {
-		datacontextTarget = new ConnectionCreator().createConnection(url, user, password, null, type);
+		datacontextTarget = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
 	}
 
 	public void startImport() throws Exception {

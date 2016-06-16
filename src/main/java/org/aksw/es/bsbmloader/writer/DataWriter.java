@@ -18,8 +18,6 @@ public class DataWriter implements Runnable {
 	private Row row;
 	private Table table;
 	private CountDownLatch latch;
-	
-
 
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
@@ -32,19 +30,20 @@ public class DataWriter implements Runnable {
 	public void setUpdateableDataContext(UpdateableDataContext dc) throws Exception {
 		this.dataContext = dc;
 	}
-	
-
 
 	public void setTable(Table table) {
 		this.table = table;
 	}
 
 	public void insertData() throws Exception {
-
-		while ((row = queue.take()) != null) {
+		
+		row = queue.take();
+		
+		while (row.size() > 0) {
+			row = queue.take();
 			if (row.size() > 0) {
 				dataContext.executeUpdate(insertScript());
-			}else{
+			} else {
 				return;
 			}
 		}
@@ -60,7 +59,7 @@ public class DataWriter implements Runnable {
 					if (!column.getColumn().getType().isTimeBased()) {
 						value = row.getValue(column);
 					} else {
-						value = new ElementParser().getDate(row.getValue(column));	
+						value = new ElementParser().getDate(row.getValue(column));
 					}
 
 					insertData.value(column.getColumn(), value);
@@ -73,18 +72,14 @@ public class DataWriter implements Runnable {
 		return insertScrript;
 	}
 
-
 	public void run() {
 		try {
 			insertData();
 			latch.countDown();
-		  
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-
-
 
 }

@@ -1,16 +1,12 @@
 package org.aksw.es.bsbmloader.starter;
 
-import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
-import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
-import org.aksw.es.bsbmloader.nosqlloader.ComplexTableUpdater;
-import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
-public class MongoStarter implements Starter {
+public class MongoStarter  {
  
-	//TODO 	restructuring function 
-	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
+	
+/**	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
 			if (commandLine.hasOption("fk") && commandLine.hasOption("fk")) {
 				MongoConnectionProperties mongo = new MongoConnectionProperties();
@@ -34,9 +30,9 @@ public class MongoStarter implements Starter {
 			}
 
 		}
-	}
+	}**/
 
-	//TODO 	restructuring function 
+/**
 	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
 		ComplexTableUpdater test = new ComplexTableUpdater();
 		if (commandLine.hasOption("join")) {
@@ -71,12 +67,12 @@ public class MongoStarter implements Starter {
 					commandLine.getOptionValue("pkSecond"), commandLine.getOptionValue("pk"),
 					commandLine.getOptionValue("secondFkey"));
 			;
-**/
-		} 
 
-	}
-	//TODO 	restructuring function 
-	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
+		} **/
+
+	
+	
+/**	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		MongoConnectionProperties mongo = new MongoConnectionProperties();
 		NoSQLParser nosql = new NoSQLParser();
 		mongo.setConnectionProperties(commandLine.getOptionValue("hostNosql"), commandLine.getOptionValue("portNosql"));
@@ -91,10 +87,7 @@ public class MongoStarter implements Starter {
 		
 		return nosql;
 	}
+**/
 
-	public DataReader createDataReader(CommandLine commandLine) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

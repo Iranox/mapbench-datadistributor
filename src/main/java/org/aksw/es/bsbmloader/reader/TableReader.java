@@ -26,6 +26,7 @@ public class TableReader {
 
 
 	public Table[] getTables(String database) throws Exception{
+		System.out.println(database);
 		Schema schema = dataContext.getSchemaByName(database);
 		Table[] tables = schema.getTables();
 		return tables;

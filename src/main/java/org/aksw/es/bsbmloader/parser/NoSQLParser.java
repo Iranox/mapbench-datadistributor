@@ -109,7 +109,7 @@ public class NoSQLParser implements Runnable {
 		}.init(name));
 	}
 	
-	//TODO restructuring function
+	
 
 	public void run() {
 		

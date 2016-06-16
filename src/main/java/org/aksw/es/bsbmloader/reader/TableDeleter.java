@@ -6,7 +6,7 @@ import org.apache.metamodel.drop.DropTable;
 import org.apache.metamodel.schema.Table;
 
 
-//TODO To Small ?
+
 public class TableDeleter {
 	private UpdateableDataContext dataContext;
 	

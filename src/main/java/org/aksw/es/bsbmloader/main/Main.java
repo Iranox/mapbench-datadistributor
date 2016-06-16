@@ -7,25 +7,48 @@ import org.apache.log4j.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
-
+//TODO Rename
 public class Main {
 	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
 	
-	/**
-
-	options.addOption("target", true, "The target table with the forgein key");
-	options.addOption("source", true, "The source table with the primary key");
-	options.addOption("fk", "forgeinKey", true, "The forgein key");
-	options.addOption("pk", "primayKey", true, "The primary key");
-	options.addOption("join", true, "The join table with the forgein key");
-	options.addOption("fkJoinTable", true, "The forgeinkey of the join table");
-	options.addOption("secondSource", true, "The secound source table");
-	options.addOption("pkSecond", true, "The primary key of the second table");
-	options.addOption("secondFkey", true, "The second key of the join table");
-    options.addOption("materializeMongo", false, "Materialize a N to One Relationship in MongoDB");
-	options.addOption("materializeCouch", false, "Materialize a N to One Relationship in MongoDB");
-	options.addOption("materializeElastic", false, "Materialize a N to One Relationship in Mon
-	options.addOption("objectId", false, "use only ObjectId"); **/
+	@Parameter(names= {"-objectId"}, description = "url of the target database")
+	private boolean objectId = false;
+	
+	@Parameter(names= {"-secondFkey"}, description = "url of the target database")
+	private String secondFkey;
+	
+	@Parameter(names= {"-pkSecond"}, description = "url of the target database")
+	private String pkSecond;
+	
+	@Parameter(names= {"-secondSource"}, description = "url of the target database")
+	private String secondSource;
+	
+	@Parameter(names= {"-fkJoinTable"}, description = "url of the target database")
+	private String fkJoinTable;
+	
+	@Parameter(names= {"-target"}, description = "url of the target database")
+	private String target;
+	
+	@Parameter(names= {"-join"}, description = "url of the target database")
+	private String join;
+	
+	@Parameter(names= {"-fk"}, description = "url of the target database")
+	private String fk;
+	
+	@Parameter(names= {"-pk"}, description = "url of the target database")
+	private String pk;
+	
+	@Parameter(names= {"-source"}, description = "url of the target database")
+	private String source;
+	
+	@Parameter(names= {"-materializeCouch"}, description = "url of the target database")
+	private boolean materializeCouch = false;
+	
+	@Parameter(names= {"-materializeMongo"}, description = "url of the target database")
+	private boolean materializeMongo = false;
+	
+	@Parameter(names= {"-materializeElastic"}, description = "url of the target database")
+	private boolean materializeElastic = false;
 	
 	@Parameter(names= {"-delete"}, description = "url of the target database")
 	private boolean delete = false;
@@ -80,8 +103,25 @@ public class Main {
 		if(importMongodb){
 			log.info("Import to MongoDB");
 			startImport("mongodb");
+			log.info("Done");
+		}
+		if(materializeMongo){
+			log.info("Import to MongoDB");
+			startMat("mongodb");
+			log.info("Done");
 		}
 		
+	}
+	
+	private void startMat(String type) throws Exception{
+		NoSQLMat nosqlMat = new NoSQLMat();
+		nosqlMat.setDatabaseName(databaseName);
+		nosqlMat.createDataContext(sourceUrl, user, password, type);
+		nosqlMat.createDataContextTarget(targetUrl, user, password,type);
+		nosqlMat.setTargetTable(target);
+		nosqlMat.setForgeinKey(fk);
+		nosqlMat.setPrimary(pk);
+		nosqlMat.importToTarget(source);
 	}
 	
 	private void startImport(String type) throws Exception{
@@ -91,76 +131,6 @@ public class Main {
 		importNosql.createDataContextTarget(targetUrl, user, password,type);;
 		importNosql.startImport();
 	}
-	
-	//TODO 	restructuring function 
-/**	private static void interpretCommandLine(CommandLine commandLine) throws Exception{
-		Starter starter = new StarterFactory().getStarter(commandLine);
-
-		if (commandLine.hasOption("parseToMongo") && hasMySQLConnectionProperties(commandLine)) {
-			startParseToNoSQL(commandLine);
-		}
-
-		if (commandLine.hasOption("parseToCouch") && hasMySQLConnectionProperties(commandLine)) {
-			startParseToNoSQL(commandLine);
-		}
-
-		if (commandLine.hasOption("parseToExcel") && hasMySQLConnectionProperties(commandLine)) {
-			startParseToNoSQL(commandLine);
-		}
-
-		if (commandLine.hasOption("parseToElastic") && hasMySQLConnectionProperties(commandLine)) {
-			startParseToNoSQL(commandLine);
-		}
-		
-		if (commandLine.hasOption("parseToJdbc") && hasMySQLConnectionProperties(commandLine)) {
-			startParseToNoSQL(commandLine);
-		}
-
-		if (commandLine.hasOption("materializeMongo")) {
-			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-				log.info("start materializeMongo"); //TODO dont trigger by simple mat.
-				starter.startMaterializeSimple(commandLine);
-				log.info("Done");
-
-			}
-		}
-		
-		if (commandLine.hasOption("materializeElastic")) {
-			if (commandLine.hasOption("portNosql")) {
-				log.info("start materializeMongo");
-				starter.startMaterializeSimple(commandLine);
-				log.info("Done");
-
-			}
-		}
-
-		if (commandLine.hasOption("materializeCouch")) {
-			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-				log.info("start materializeCouch");
-				starter.startMaterializeSimple(commandLine);
-				log.info("Done");
-
-			}
-		}
-
-		if (commandLine.hasOption("materializeMongo") && commandLine.hasOption("join")) {
-			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-				log.info("start materializeMongo");
-				starter.startMaterializeComplex(commandLine);
-				log.info("Done");
-
-			}
-		}
-
-		if (commandLine.hasOption("materializeCouch") && commandLine.hasOption("join")) {
-			if (commandLine.hasOption("hostNosql") && commandLine.hasOption("portNosql")) {
-				log.info("start materializeCouch");
-				starter.startMaterializeComplex(commandLine);
-				log.info("Done");
-
-			}
-		}
-	} **/
 
 
 }

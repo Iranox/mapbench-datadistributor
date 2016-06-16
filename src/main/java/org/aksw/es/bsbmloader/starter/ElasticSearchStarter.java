@@ -1,18 +1,13 @@
 package org.aksw.es.bsbmloader.starter;
 
-import org.aksw.es.bsbmloader.connectionproperties.ElasticConnectionProperties;
-import org.aksw.es.bsbmloader.nosqlloader.NoSQLLoader;
-import org.aksw.es.bsbmloader.parser.NoSQLParser;
-import org.aksw.es.bsbmloader.reader.DataReader;
-import org.apache.commons.cli.CommandLine;
 
-public class ElasticSearchStarter implements Starter{
+public class ElasticSearchStarter {
 
-	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
-		// TODO Implement Complex for elastic
+/**	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
+		
 		
 	}
-	//TODO 	restructuring function 
+	
 	public void startMaterializeSimple(CommandLine commandLine) throws Exception {
 		if (commandLine.hasOption("target") && commandLine.hasOption("source")) {
 			if (commandLine.hasOption("fk") && commandLine.hasOption("fk")) {
@@ -31,8 +26,8 @@ public class ElasticSearchStarter implements Starter{
 
 		}
 		
-	}
-	//TODO 	restructuring function 
+	}*/
+	/**
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		ElasticConnectionProperties elastic = new ElasticConnectionProperties();
 		NoSQLParser nosql = new NoSQLParser();
@@ -48,8 +43,7 @@ public class ElasticSearchStarter implements Starter{
 		return nosql;
 	}
 	public DataReader createDataReader(CommandLine commandLine) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
-	}
+	}**/
 
 }

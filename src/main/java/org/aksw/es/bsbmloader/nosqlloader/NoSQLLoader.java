@@ -1,14 +1,11 @@
 package org.aksw.es.bsbmloader.nosqlloader;
 
-import org.apache.metamodel.UpdateableDataContext;
-import org.apache.metamodel.schema.Column;
-import org.apache.metamodel.schema.Table;
 
 /**
  * @author Tobias
  */
 public class NoSQLLoader {
-	private UpdateableDataContext dataContext;
+/**	private UpdateableDataContext dataContext;
 	private static final int BORDER_DATASET = 3000;
 	private static final int INCREASE_OFFSET = 1000;
 	private boolean onlyID = false;
@@ -46,31 +43,27 @@ public class NoSQLLoader {
 			 simpleUpdateThreads(source);
 		}
 
-		//TODO  A Mistake ?
+	
 		if (rowCount < 0) {
 			simpleUpdateWithoutTHreadRemain(source);
 		}
 	}
 
-	// TODO use new function.
+
 	public void materializeComplexData(String database, String sourceTable, String fkJoinTable, String joinTable,
 			String secondSourceTable, String pkSecondSource, String pkFirstSource, String secondFkey) throws Exception {
 
 		ComplexTableUpdater createTable = new ComplexTableUpdater();
 		createTable.setDataContext(dataContext);
 
-		/**
-		 * Insert Rows
-		 */
+	
 		int rowCount = new TableCounter().getRowNumber(dataContext, sourceTable);
 		int startRows = rowCount;
 		if (rowCount < BORDER_DATASET) {
 			ComplexTableUpdater updater = new ComplexTableUpdater();
 			updater.setPkSecond(pkSecondSource);
 			updater.setSecondSource(secondSourceTable);
-			/**
-			 * if(onlyID){ updater.setOnlyID(true); }
-			 **/
+			
 			updater.setDataContext(dataContext);
 			updater.setLimit(rowCount);
 			updater.compressData(joinTable, secondFkey, fkJoinTable);
@@ -117,7 +110,7 @@ public class NoSQLLoader {
 			updater.setSecondSource(secondSourceTable);
 			/**
 			 * if(onlyID){ updater.setOnlyID(true); }
-			 **/
+		
 			updater.setDataContext(dataContext);
 			updater.setLimit(startRows - rowCount);
 			updater.compressData(joinTable, secondFkey, fkJoinTable);
@@ -191,7 +184,7 @@ public class NoSQLLoader {
 			thirdUpdateThread.join();
 		}
 	}
-
+**/
 
 
 }

@@ -13,7 +13,6 @@ import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
 //TODO Scale Test for this class
-//TODO Implements Runnable
 public class ComplexTableUpdater extends Thread{
 
 	private UpdateableDataContext dataContext;

@@ -1,11 +1,9 @@
 package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.ExcelPath;
-import org.aksw.es.bsbmloader.parser.NoSQLParser;
-import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
-public class ExcelStarter implements Starter {
+public class ExcelStarter  {
 
 	public void startMaterializeComplex(CommandLine commandLine) throws Exception {
 		throw new Exception("Not supported");
@@ -17,16 +15,7 @@ public class ExcelStarter implements Starter {
 		
 	}
 
-	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
-		ExcelPath excel = new ExcelPath();
-		NoSQLParser nosql = new NoSQLParser();
-		nosql.setUpdateableDataContext(excel.getDB(commandLine.getOptionValue("excelFile")));
-		return nosql;
-	}
 
-	public DataReader createDataReader(CommandLine commandLine) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 }
