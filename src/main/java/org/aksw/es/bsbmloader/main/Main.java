@@ -105,13 +105,37 @@ public class Main {
 			startImport("mongodb");
 			log.info("Done");
 		}
-		if(materializeMongo){
+		
+		if(materializeMongo && join == null){
 			log.info("Import to MongoDB");
-			startMat("mongodb");
+//			startMat("mongodb");
+			log.info("Done");
+		}
+		
+		if(materializeMongo && join != null){
+			log.info("Import to MongoDB");
+			startMatComplex("mongodb");
 			log.info("Done");
 		}
 		
 	}
+	
+	private void startMatComplex(String type) throws Exception{
+		NoSQLMatComplex nosqlMat = new NoSQLMatComplex();
+		nosqlMat.setDatabaseName(databaseName);
+		nosqlMat.createDataContext(sourceUrl, user, password, type);
+		nosqlMat.createDataContextTarget(targetUrl, user, password, type);
+		nosqlMat.setTarget(join);
+		nosqlMat.setFk(fk);
+		nosqlMat.setJoin(join);
+		nosqlMat.setSecondFkey(secondFkey);
+		nosqlMat.setSecondSource(secondSource);
+		nosqlMat.setPrimary(secondFkey);
+		nosqlMat.setFkJoinTable(fkJoinTable);
+		nosqlMat.setPkSecond(pkSecond);
+		nosqlMat.importToTarget(target);
+	}
+	
 	
 	private void startMat(String type) throws Exception{
 		NoSQLMat nosqlMat = new NoSQLMat();

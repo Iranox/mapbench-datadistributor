@@ -11,12 +11,12 @@ import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 
-public class ComplexDataReader {
+public class ComplexDataReader implements Runnable {
 	private DataContext dataContext;
 	private BlockingQueue<ComplexData> queueComplexData = null;
 	private static org.apache.log4j.Logger log = Logger.getLogger(ComplexDataReader.class);
 	private CountDownLatch latch;
-	final static ComplexData POSIONROW = null;
+	final static ComplexData POSIONROW = new ComplexData(new PosionRow().getPosionRow(), null);
 	private String secondFkey;
 	private String joinTable;
 	private String forgeinKey;
@@ -24,7 +24,30 @@ public class ComplexDataReader {
 	private String secondSource;
 	ArrayList<Row> arrayData;
 	
-	
+
+	public void setSecondFkey(String secondFkey) {
+		this.secondFkey = secondFkey;
+	}
+
+
+
+	public void setForgeinKey(String forgeinKey) {
+		this.forgeinKey = forgeinKey;
+	}
+
+
+
+	public void setPkSecond(String pkSecond) {
+		this.pkSecond = pkSecond;
+	}
+
+
+
+	public void setSecondSource(String secondSource) {
+		this.secondSource = secondSource;
+	}
+
+
 
 	public ComplexDataReader(DataContext dataContext, BlockingQueue<ComplexData> queueComplexData,
 			CountDownLatch latch) {
@@ -55,6 +78,10 @@ public class ComplexDataReader {
 		queueComplexData.put(POSIONROW);
 	}
 	
+	public void setJoinTable(String joinTable ){
+		this.joinTable = joinTable;
+	}
+	
 
 	
 	
@@ -62,13 +89,20 @@ public class ComplexDataReader {
 		Column primaryColumn = dataContext.getTableByQualifiedLabel(joinTable).getColumnByName(secondFkey);
 		DataSet dataSet = dataContext.query().from(joinTable).select(primaryColumn).groupBy(primaryColumn).execute();
 		while (dataSet.next()) {
+
+			arrayData = new ArrayList<Row>();
 			Object dataValue = dataSet.getRow().getValue(primaryColumn);
+//			System.out.println(forgeinKey);
 			DataSet dataSetArray = dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
 					.eq(dataValue).execute();
-			a(dataSetArray);
+			System.out.println(dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
+					.eq(dataValue).toQuery());
+			readDataSet(dataSetArray);
 			ComplexData complexDataObject = new ComplexData(dataSet.getRow(),arrayData);
-			queueComplexData.put(complexDataObject);
+			queueComplexData.put(complexDataObject); 
 			dataSetArray.close();
+
+//			arrayData = new ArrayList<Row>();
 			
 		}
 		insertPosion();
@@ -76,14 +110,14 @@ public class ComplexDataReader {
 
 	}
 	
-	private void a(DataSet dataSetArry){
+	private void readDataSet(DataSet dataSetArry){
 		while(dataSetArry.next()){
+			System.out.println(dataSetArry.getRow().getValue(0));
 			getComplexData(dataSetArry.getRow().getValue(0));
 		}
 	}
 	
 	private void getComplexData(Object object){
-		
 		DataSet dataSet = dataContext.query().from(secondSource).selectAll().where(pkSecond).eq(object).execute();
 		while(dataSet.next()){
 			arrayData.add(dataSet.getRow());

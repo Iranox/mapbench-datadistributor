@@ -19,7 +19,6 @@ import org.apache.metamodel.schema.Table;
 public class DataComplexUpdater implements Runnable {
 	private BlockingQueue<ComplexData> queue = null;
 	private UpdateableDataContext dataContext;
-	private Row row;
 	private Table targetTable;
 	private CountDownLatch latch;
 	ComplexData complexDataObject;
@@ -34,14 +33,20 @@ public class DataComplexUpdater implements Runnable {
 		this.latch = latch;
 		this.dataContext = dc;
 	}
+	
+	
 
-	public void setPrimrayKey(Column key) {
-		this.primaryKey = key;
+	public void setPrimrayKey(String key) {
+		this.primaryKey = targetTable.getColumnByName(key);
+	}
+	
+	public void setForgeinKey(String forgeinkey){
+		this.forgeinKey = forgeinkey;
 	}
 
 	public void insertData() throws Exception {
 		while (((complexDataObject = queue.take())) == POSION) {
-			if (row.size() > 0) {
+			if (complexDataObject.getPrimaryValue().size() > 0) {
 				dataContext.executeUpdate(insertComplexData());
 			} else {
 				return;
@@ -60,9 +65,10 @@ public class DataComplexUpdater implements Runnable {
 				for (SelectItem column : complexDataObject.getPrimaryValue().getSelectItems()) {
 					insertRow.value(column.getColumn().getName(), complexDataObject.getPrimaryValue().getValue(column));
 				}
-				insertRow.value(forgeinKey, createDataObject(complexDataObject.getArrayData()).toArray());
+				System.out.println(complexDataObject.getArrayData().get(0));
+				insertRow.value(forgeinKey, createDataObject(complexDataObject.getArrayData()));
 
-				insertRow.execute();
+				System.out.println(insertRow.toSql());
 			}
 		};
 		return update;
@@ -70,6 +76,7 @@ public class DataComplexUpdater implements Runnable {
 
 	private ArrayList<Map<String, Object>> createDataObject(ArrayList<Row> rowArray) {
 		ArrayList<Map<String, Object>> nestedObjArray = new ArrayList<Map<String, Object>>();
+		System.out.println(rowArray.size());
 		for (Row row : rowArray) {
 			Map<String, Object> nestedObj = new HashMap<String, Object>();
 			for (SelectItem column : row.getSelectItems()) {
