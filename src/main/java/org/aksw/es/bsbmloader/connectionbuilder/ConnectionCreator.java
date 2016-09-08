@@ -6,9 +6,8 @@ import org.apache.metamodel.UpdateableDataContext;
 
 public class ConnectionCreator {
 	
-//	startImport("mongodb");
-	
-	public UpdateableDataContext createConnection(String url,String user, String password, String type) throws Exception {
+
+		public UpdateableDataContext createConnection(String url,String user, String password, String type) throws Exception {
 		ConnectionDatabase connection = null;
 		if (url != null && url.contains("mysql")) {
 			connection = new ConnectionBuilder().createConnectionProperties("mysql");

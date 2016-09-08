@@ -12,13 +12,9 @@ public class TableReader {
 	public TableReader( UpdateableDataContext dataContext) {
 		this.dataContext = dataContext;
 	}
-	
-	public void setDataContext(UpdateableDataContext dataContext) {
-		this.dataContext = dataContext;
-	}
-	
+		
 	public Column getColumn(String database, String primaryKey, String tableName){
-		Schema schema = dataContext.getSchemaByName(database);
+		Schema schema = dataContext.getDefaultSchema();
 		Table table = schema.getTableByName(tableName);
 		Column column = table.getColumnByName(primaryKey);
 		return column;
@@ -26,8 +22,7 @@ public class TableReader {
 
 
 	public Table[] getTables(String database) throws Exception{
-		System.out.println(database);
-		Schema schema = dataContext.getSchemaByName(database);
+		Schema schema = dataContext.getDefaultSchema();
 		Table[] tables = schema.getTables();
 		return tables;
 	}

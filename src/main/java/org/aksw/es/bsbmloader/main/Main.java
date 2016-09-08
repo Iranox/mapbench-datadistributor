@@ -108,19 +108,20 @@ public class Main {
 		
 		if(materializeMongo && join == null){
 			log.info("Import to MongoDB");
-//			startMat("mongodb");
+			startMat("mongodb");
 			log.info("Done");
 		}
 		
 		if(materializeMongo && join != null){
 			log.info("Import to MongoDB");
-			startMatComplex("mongodb");
+//			startMatComplex("mongodb");
 			log.info("Done");
 		}
 		
 	}
 	
-	private void startMatComplex(String type) throws Exception{
+//	TODO Check main pc if class exists. If not create Class NoSQLMatComplex
+/**private void startMatComplex(String type) throws Exception{
 		NoSQLMatComplex nosqlMat = new NoSQLMatComplex();
 		nosqlMat.setDatabaseName(databaseName);
 		nosqlMat.createDataContext(sourceUrl, user, password, type);
@@ -135,7 +136,7 @@ public class Main {
 		nosqlMat.setPkSecond(pkSecond);
 		nosqlMat.importToTarget(target);
 	}
-	
+	***/
 	
 	private void startMat(String type) throws Exception{
 		NoSQLMat nosqlMat = new NoSQLMat();

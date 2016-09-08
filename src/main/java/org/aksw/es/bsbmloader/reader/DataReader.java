@@ -52,6 +52,7 @@ public class DataReader implements Runnable {
 	}
 
 	private DataSet createDataSet() {
+//		TODO Create function Count for this part
 		if (numbers == 0 && !isFinish) {
 			DataSet number = dataContext.query().from(table).selectCount().execute();
 			number.next();
@@ -59,6 +60,7 @@ public class DataReader implements Runnable {
 			numbers = n.intValue();
 			limit = BORDER;
 		}
+//		Refactor ///////////////////////////////////////////////////////
 
 
 		if (numbers > BORDER && !isFinish) {
@@ -79,7 +81,7 @@ public class DataReader implements Runnable {
 		DataSet dataSet = createDataSet();
 
 		while (numbers > 0) {
-			getRow(dataSet);
+			insertRowIntoBlockingQueue(dataSet);
 			dataSet.close();
 			setNewOffset();
 			dataSet = createDataSet();
@@ -97,7 +99,7 @@ public class DataReader implements Runnable {
 		} 
 	}
 
-	private void getRow(DataSet dataset) throws InterruptedException {
+	private void insertRowIntoBlockingQueue(DataSet dataset) throws InterruptedException {
 		while (dataset.next()) {
 			Row row = dataset.getRow();
 			row.getSelectItems();

@@ -26,24 +26,6 @@ public class MongoConnectionProperties extends ConnectionProperties implements C
 		return dataContext;
 	}
 	
-	@Deprecated
-	public UpdateableDataContext getDB(String name) throws Exception {
-		MongoClient mongoClient = new MongoClient(hostname, port);
-		DB databaseMongo = new DB(mongoClient, name);
-		mongoClient.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
-		UpdateableDataContext dataContext = new MongoDbDataContext(databaseMongo);
-		return dataContext;
-	}
-
-	@Deprecated
-	public UpdateableDataContext getDBwriteConcern(String name) throws Exception {
-		MongoClient mongoClient = new MongoClient(hostname, port);
-		DB databaseMongo = new DB(mongoClient, name);
-		// mongoClient.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		UpdateableDataContext dataContext = new MongoDbDataContext(databaseMongo);
-		return dataContext;
-	}
-
 	public void setConnectionProperties(String jdbcurl, String user, String password) throws Exception {
 		throw new Exception("Unsupported");
 

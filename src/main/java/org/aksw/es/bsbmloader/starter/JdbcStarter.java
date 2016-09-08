@@ -1,7 +1,6 @@
 package org.aksw.es.bsbmloader.starter;
 
 import org.aksw.es.bsbmloader.connectionproperties.JdbcConnectionProperties;
-import org.aksw.es.bsbmloader.parser.NoSQLParser;
 import org.aksw.es.bsbmloader.reader.DataReader;
 import org.apache.commons.cli.CommandLine;
 
@@ -33,7 +32,7 @@ public class JdbcStarter implements Starter {
 		return commandLine.hasOption("hostNosql") && commandLine.hasOption("user")
 				&& commandLine.hasOption("targetUrl");
 	}
-
+/**
 	@Deprecated //remove
 	public NoSQLParser createConnectionProperties(CommandLine commandLine) throws Exception {
 		JdbcConnectionProperties jdbc = new JdbcConnectionProperties();
@@ -46,6 +45,6 @@ public class JdbcStarter implements Starter {
 		NoSQLParser nosql = new NoSQLParser();
 		nosql.setUpdateableDataContext(jdbc.getDB());
 		return nosql;
-	}
+	}**/
 
 }

@@ -65,10 +65,7 @@ public class DataComplexUpdater implements Runnable {
 				for (SelectItem column : complexDataObject.getPrimaryValue().getSelectItems()) {
 					insertRow.value(column.getColumn().getName(), complexDataObject.getPrimaryValue().getValue(column));
 				}
-				System.out.println(complexDataObject.getArrayData().get(0));
 				insertRow.value(forgeinKey, createDataObject(complexDataObject.getArrayData()));
-
-				System.out.println(insertRow.toSql());
 			}
 		};
 		return update;
@@ -76,7 +73,6 @@ public class DataComplexUpdater implements Runnable {
 
 	private ArrayList<Map<String, Object>> createDataObject(ArrayList<Row> rowArray) {
 		ArrayList<Map<String, Object>> nestedObjArray = new ArrayList<Map<String, Object>>();
-		System.out.println(rowArray.size());
 		for (Row row : rowArray) {
 			Map<String, Object> nestedObj = new HashMap<String, Object>();
 			for (SelectItem column : row.getSelectItems()) {

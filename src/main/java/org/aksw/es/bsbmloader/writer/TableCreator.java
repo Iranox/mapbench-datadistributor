@@ -4,7 +4,6 @@ import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.create.TableCreationBuilder;
-import org.apache.metamodel.drop.DropTable;
 import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.ColumnType;
@@ -35,15 +34,16 @@ public class TableCreator {
 
 	}
 
-	public void deleteDatabase(Table table) {
+/**	public void deleteDatabase(Table table) {
 		if (dataContext.getTableByQualifiedLabel(table.getName()) != null) {
 			dataContext.executeUpdate(new DropTable(table.getName()));
 		}
-	}
+	}**/
 
 	private UpdateScript updateScript() {
 
 		UpdateScript updateScript = new UpdateScript() {
+			
 
 			public void run(UpdateCallback callback) {
 				TableCreationBuilder tableCreation = null;
@@ -89,8 +89,9 @@ public class TableCreator {
 
 						}
 					
-					tableCreation.execute();
+					
 				}
+					tableCreation.execute();
 
 			
 			}

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
-
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.data.DataSet;
@@ -23,31 +22,22 @@ public class ComplexDataReader implements Runnable {
 	private String pkSecond;
 	private String secondSource;
 	ArrayList<Row> arrayData;
-	
 
 	public void setSecondFkey(String secondFkey) {
 		this.secondFkey = secondFkey;
 	}
 
-
-
 	public void setForgeinKey(String forgeinKey) {
 		this.forgeinKey = forgeinKey;
 	}
-
-
 
 	public void setPkSecond(String pkSecond) {
 		this.pkSecond = pkSecond;
 	}
 
-
-
 	public void setSecondSource(String secondSource) {
 		this.secondSource = secondSource;
 	}
-
-
 
 	public ComplexDataReader(DataContext dataContext, BlockingQueue<ComplexData> queueComplexData,
 			CountDownLatch latch) {
@@ -58,33 +48,24 @@ public class ComplexDataReader implements Runnable {
 		arrayData = new ArrayList<Row>();
 	}
 
-
-
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
 	}
 
-
-
 	public void setDataContext(DataContext dataContext) {
 		this.dataContext = dataContext;
 	}
-
-
 
 	private void insertPosion() throws Exception {
 		queueComplexData.put(POSIONROW);
 		queueComplexData.put(POSIONROW);
 		queueComplexData.put(POSIONROW);
 	}
-	
-	public void setJoinTable(String joinTable ){
+
+	public void setJoinTable(String joinTable) {
 		this.joinTable = joinTable;
 	}
-	
 
-	
-	
 	public void readComplexData() throws Exception {
 		Column primaryColumn = dataContext.getTableByQualifiedLabel(joinTable).getColumnByName(secondFkey);
 		DataSet dataSet = dataContext.query().from(joinTable).select(primaryColumn).groupBy(primaryColumn).execute();
@@ -92,40 +73,33 @@ public class ComplexDataReader implements Runnable {
 
 			arrayData = new ArrayList<Row>();
 			Object dataValue = dataSet.getRow().getValue(primaryColumn);
-//			System.out.println(forgeinKey);
 			DataSet dataSetArray = dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
 					.eq(dataValue).execute();
-			System.out.println(dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
-					.eq(dataValue).toQuery());
 			readDataSet(dataSetArray);
-			ComplexData complexDataObject = new ComplexData(dataSet.getRow(),arrayData);
-			queueComplexData.put(complexDataObject); 
+			ComplexData complexDataObject = new ComplexData(dataSet.getRow(), arrayData);
+			queueComplexData.put(complexDataObject);
 			dataSetArray.close();
 
-//			arrayData = new ArrayList<Row>();
-			
 		}
 		insertPosion();
 		dataSet.close();
 
 	}
-	
-	private void readDataSet(DataSet dataSetArry){
-		while(dataSetArry.next()){
-			System.out.println(dataSetArry.getRow().getValue(0));
+
+	private void readDataSet(DataSet dataSetArry) {
+		while (dataSetArry.next()) {
 			getComplexData(dataSetArry.getRow().getValue(0));
 		}
 	}
-	
-	private void getComplexData(Object object){
+
+	private void getComplexData(Object object) {
 		DataSet dataSet = dataContext.query().from(secondSource).selectAll().where(pkSecond).eq(object).execute();
-		while(dataSet.next()){
+		while (dataSet.next()) {
 			arrayData.add(dataSet.getRow());
 		}
 		dataSet.close();
-	
-	}
 
+	}
 
 	public void run() {
 		try {
