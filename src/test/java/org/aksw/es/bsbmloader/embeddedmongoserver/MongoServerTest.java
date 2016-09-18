@@ -1,5 +1,6 @@
 package org.aksw.es.bsbmloader.embeddedmongoserver;
 
+
 import static org.junit.Assert.assertEquals;
 
 import org.bson.Document;

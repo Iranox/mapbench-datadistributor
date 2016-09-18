@@ -10,6 +10,7 @@ import org.aksw.es.bsbmloader.reader.TableDeleter;
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.jdbc.JdbcDataContext;
 import org.apache.metamodel.mongodb.MongoDbDataContext;
+import org.apache.metamodel.schema.Schema;
 import org.apache.metamodel.schema.Table;
 import org.junit.After;
 import org.junit.Before;
@@ -21,31 +22,57 @@ public class TableCreatorTest {
 	
 	private TableCreator creator = null;
 	
+	
 	@Before
 	public void setup(){
 		creator = new TableCreator();
+		deleteMongoDB();
 	}
 	
 	@After
 	public void teardown() throws SQLException{
 		new EmbeddedH2Server().dropTestTable();
+		deleteMongoDB();
 	}
 	
+	
+	@Test
+	public void testTableCreatorWithTwoTargets(){
+		Table h2Table = createSource();
+		UpdateableDataContext[] dataSourceArray = {testTargetH2(), createTargetMongo()};
+		creator.createTableWithMoreTargets(h2Table, dataSourceArray);
+		creator.setDataContext(dataSourceArray[0]);
+		assertEquals("TESTTABLE", getTableName());
+		creator.setDataContext(dataSourceArray[1]);
+		assertEquals("TESTTABLE", getTableName());
+		
+	}
 	
 	@Test
 	public void testTableCreator(){
 		creator.setDataContext(createTargetMongo());
-		creator.createTable(createSource(), null);	
-		assertEquals("TESTTABLE", creator.getDataContext().getTableByQualifiedLabel("TESTTABLE").getName());
+		creator.createTable(createSource(), null);
+		assertEquals("TESTTABLE",getTableName());
+		deleteMongoDB();
+	}
+	
+	private String getTableName(){
+		Schema schema = creator.getDataContext().getDefaultSchema();
+		Table table = schema.getTableByName("TESTTABLE");
+		return table.getName();
 	}
 	
 	@Test
 	public void testTableCreatorWithQueryWriter(){
-		Table h2 = createSource();
+		Table h2Table = createSource();
 		JdbcDataContext target = testTargetH2();
 		creator.setDataContext(target);
-		creator.createTable(h2, target.getQueryRewriter() );
-		assertEquals(1, creator.getDataContext().getDefaultSchema().getTableCount());
+		creator.createTable(h2Table, target.getQueryRewriter() );
+		assertEquals("TESTTABLE",getTableName());
+	}
+
+	private void deleteMongoDB(){
+		 new EmbeddedMongoServer().getClient().getDatabase("test").getCollection("TESTTABLE").drop();
 	}
 	
 

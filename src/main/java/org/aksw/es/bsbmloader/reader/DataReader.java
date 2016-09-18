@@ -46,9 +46,9 @@ public class DataReader implements Runnable {
 	}
 
 	private void insertPosion() throws Exception {
-		queue.put(new PosionRow().getPosionRow());
-		queue.put(new PosionRow().getPosionRow());
-		queue.put(new PosionRow().getPosionRow());
+		queue.put(PosionRow.posionRow);
+		queue.put(PosionRow.posionRow);
+		queue.put(PosionRow.posionRow);
 	}
 
 	private DataSet createDataSet() {

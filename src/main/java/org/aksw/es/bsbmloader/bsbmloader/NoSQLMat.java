@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.main;
+package org.aksw.es.bsbmloader.bsbmloader;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -17,9 +17,9 @@ import org.apache.metamodel.schema.Table;
 public class NoSQLMat {
 	
 	private UpdateableDataContext datacontextSource = null;
-	private UpdateableDataContext datacontextTarget = null;
-	private UpdateableDataContext datacontextTarget1 = null;
-	private UpdateableDataContext datacontextTarget2 = null;
+	private UpdateableDataContext firstDatacontextTarget = null;
+	private UpdateableDataContext secondDatacontextTarget = null;
+	private UpdateableDataContext thirdDatacontextTarget = null;
 	private String targetKey;
 	private final int BORDER = 1000;
 	private String databaseName;
@@ -47,23 +47,24 @@ public class NoSQLMat {
 	}
 
 	public void createDataContextTarget(String url,String user, String password, String type) throws Exception {
-		datacontextTarget = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
-		datacontextTarget1 =new ConnectionCreator().createConnection(url, user, password, databaseName, type);
-	    datacontextTarget2 = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
+		firstDatacontextTarget = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
+		secondDatacontextTarget =new ConnectionCreator().createConnection(url, user, password, databaseName, type);
+	    thirdDatacontextTarget = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
 	}
 	
 	public void setTargetTable(String tableName){
-		 target = datacontextTarget.getTableByQualifiedLabel(tableName);
+		 target = firstDatacontextTarget.getTableByQualifiedLabel(tableName);
 	}
 
 	public void importToTarget(String table) throws Exception {
 		queue = new ArrayBlockingQueue<Row>(BORDER);
 		ExecutorService executor = Executors.newFixedThreadPool(4);
 		latch = new CountDownLatch(4);
+		
 		executor.execute(createDataReader(datacontextSource.getTableByQualifiedLabel(table), latch));
-		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),datacontextTarget));
-		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),datacontextTarget1));
-		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),datacontextTarget2));
+		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),firstDatacontextTarget));
+		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),secondDatacontextTarget));
+		executor.execute(createDataWriter(target, latch,datacontextSource.getTableByQualifiedLabel(table),thirdDatacontextTarget));
 
 		latch.await();
 		executor.shutdown();
@@ -82,7 +83,7 @@ public class NoSQLMat {
 
 	private DataSimpleUpdater createDataWriter(Table table, CountDownLatch latch, Table source, UpdateableDataContext dc) throws Exception {
 		DataSimpleUpdater dataWriter = new DataSimpleUpdater(latch, table, queue, dc);
-		Column clumn = datacontextTarget.getTableByQualifiedLabel(table.getName()).getColumnByName(targetKey);
+		Column clumn = firstDatacontextTarget.getTableByQualifiedLabel(table.getName()).getColumnByName(targetKey);
 		dataWriter.setForgeinKey(clumn);
 		dataWriter.setSource(source.getName());
 		dataWriter.setPrimaryKey(primary);

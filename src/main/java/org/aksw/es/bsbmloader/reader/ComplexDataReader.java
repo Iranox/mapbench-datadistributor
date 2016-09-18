@@ -15,7 +15,7 @@ public class ComplexDataReader implements Runnable {
 	private BlockingQueue<ComplexData> queueComplexData = null;
 	private static org.apache.log4j.Logger log = Logger.getLogger(ComplexDataReader.class);
 	private CountDownLatch latch;
-	final static ComplexData POSIONROW = new ComplexData(new PosionRow().getPosionRow(), null);
+	final static ComplexData POSIONROW = new ComplexData(PosionRow.posionRow, null);
 	private String secondFkey;
 	private String joinTable;
 	private String forgeinKey;

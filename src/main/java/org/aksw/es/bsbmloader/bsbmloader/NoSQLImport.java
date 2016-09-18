@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.main;
+package org.aksw.es.bsbmloader.bsbmloader;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -14,9 +14,6 @@ import org.aksw.es.bsbmloader.writer.TableCreator;
 
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.Row;
-import org.apache.metamodel.jdbc.dialects.IQueryRewriter;
-import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
-import org.apache.metamodel.jdbc.dialects.PostgresqlQueryRewriter;
 import org.apache.metamodel.schema.Table;
 
 public class NoSQLImport {
@@ -42,13 +39,13 @@ public class NoSQLImport {
 	public void startImport() throws Exception {
 		TableReader tableReader = new TableReader(datacontextSource);
 		for (Table table : tableReader.getTables(databaseName)) {
-			createTargetTables(table);
+			createTablesinTargetDatabase(table);
 			importToTarget(table);
 		}
 	}
 
-	// TODO rename
-	public void createTargetTables(Table table) throws Exception {
+	
+	public void createTablesinTargetDatabase(Table table) throws Exception {
 		TableCreator tableCreator = new TableCreator();
 		tableCreator.setDataContext(datacontextTarget);
 		tableCreator.createTable(table, null);
@@ -88,18 +85,6 @@ public class NoSQLImport {
 		dataWriter.setUpdateableDataContext(datacontextTarget);
 		dataWriter.setLatch(latch);
 		return dataWriter;
-	}
-
-	private IQueryRewriter getIQueryRewriter(String url) {
-
-		if (url.contains("mysql")) {
-			return new MysqlQueryRewriter(null);
-		}
-		if (url.contains("postgesql")) {
-			return new PostgresqlQueryRewriter(null);
-		}
-
-		return null;
 	}
 
 }

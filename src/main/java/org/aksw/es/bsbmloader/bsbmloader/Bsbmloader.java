@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.main;
+package org.aksw.es.bsbmloader.bsbmloader;
 
 
 
@@ -8,8 +8,8 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 //TODO Rename
-public class Main {
-	private static org.apache.log4j.Logger log = Logger.getLogger(Main.class);
+public class Bsbmloader {
+	private static org.apache.log4j.Logger log = Logger.getLogger(Bsbmloader.class);
 	
 	@Parameter(names= {"-objectId"}, description = "url of the target database")
 	private boolean objectId = false;
@@ -93,7 +93,7 @@ public class Main {
 	
 	public static void main(String[] args) throws Exception {
 		
-		Main main = new Main();
+		Bsbmloader main = new Bsbmloader();
 		new JCommander(main, args);
 		main.interpretCommandLine();
 		

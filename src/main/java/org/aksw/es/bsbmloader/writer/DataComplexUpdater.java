@@ -13,7 +13,6 @@ import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
-import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
 public class DataComplexUpdater implements Runnable {
@@ -23,7 +22,6 @@ public class DataComplexUpdater implements Runnable {
 	private CountDownLatch latch;
 	ComplexData complexDataObject;
 	private String forgeinKey;
-	private Column primaryKey;
 	final static ComplexData POSION = null;
 
 	public DataComplexUpdater(CountDownLatch latch, Table table, BlockingQueue<ComplexData> queue,
@@ -36,10 +34,7 @@ public class DataComplexUpdater implements Runnable {
 	
 	
 
-	public void setPrimrayKey(String key) {
-		this.primaryKey = targetTable.getColumnByName(key);
-	}
-	
+
 	public void setForgeinKey(String forgeinkey){
 		this.forgeinKey = forgeinkey;
 	}

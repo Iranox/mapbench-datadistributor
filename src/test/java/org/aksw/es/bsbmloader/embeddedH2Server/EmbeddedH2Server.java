@@ -12,6 +12,7 @@ public class EmbeddedH2Server {
 	public EmbeddedH2Server(){
 		try {
 			createh2Connection();
+			dropTestTable();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
@@ -21,7 +22,6 @@ public class EmbeddedH2Server {
 
 	public Connection getClient() {
 		try {
-			createh2Connection();
 			createTestTable();
 			insertTestData();
 		} catch (Exception e) {
@@ -49,6 +49,14 @@ public class EmbeddedH2Server {
 		stmt.executeUpdate(dropQ);
 	}
 	
+	public void dropTTable(String tableName) throws SQLException{
+		Statement stmt = conn.createStatement();
+		String dropQ = "DROP TABLE IF EXISTS " + tableName;
+		stmt.executeUpdate(dropQ);
+	}
+	
+	
+	
 	private void insertTestData() throws SQLException{
 		Statement stmt = conn.createStatement();
 		String insertQ = "INSERT INTO " + tab + " VALUES(1,'Hello World!')";
@@ -61,7 +69,6 @@ public class EmbeddedH2Server {
 			try {
 				closeConnection();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

@@ -1,5 +1,6 @@
 package org.aksw.es.bsbmloader.connectionbuilder;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.aksw.es.bsbmloader.connectionproperties.JdbcConnectionProperties;
@@ -26,6 +27,12 @@ public class ConnectionBuilderTest {
 	public void testConnectionBuilderMongoDb() {
 		ConnectionDatabase database = builder.createConnectionProperties("mongodb");
 		assertTrue(database instanceof MongoConnectionProperties);
+	}
+	
+	@Test
+	public void testConnectionBuilderOther() {
+		ConnectionDatabase database = builder.createConnectionProperties("otherDatabase");
+		assertNull(database);
 	}
 
 }

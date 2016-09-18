@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ElementParserTest {
 	
-	private Date utilDate = null;
+	private Date utilDate;
 	
 	@Before
 	public void setup() {
@@ -21,20 +21,13 @@ public class ElementParserTest {
 	public void testParseTimeSqlDate(){
 		java.sql.Date sqlDate = new java.sql.Date( utilDate.getTime());
 		Object timeObject = sqlDate;
-		assertEquals(utilDate, new ElementParser().getDate(timeObject));
+		assertEquals(utilDate,  ElementParser.getDate(timeObject));
 	}
 	
 	@Test
 	public void testParseTimeTimeStamp(){
 		Timestamp time = new Timestamp(utilDate.getTime());
 		Object timeStampObject = time;
-		assertEquals(utilDate, new ElementParser().getDate(timeStampObject));
+		assertEquals(utilDate,  ElementParser.getDate(timeStampObject));
 	}
-	
-	@Test
-	public void testParseInteger(){
-		Object numberObject = 42;
-		assertEquals(42, new ElementParser().getInteger(numberObject));
-	}
-
 }

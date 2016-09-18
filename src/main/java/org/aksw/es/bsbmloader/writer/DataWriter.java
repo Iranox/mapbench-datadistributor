@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 import org.aksw.es.bsbmloader.parser.ElementParser;
+import org.aksw.es.bsbmloader.reader.PosionRow;
 import org.apache.metamodel.UpdateCallback;
 import org.apache.metamodel.UpdateScript;
 import org.apache.metamodel.UpdateableDataContext;
@@ -36,16 +37,12 @@ public class DataWriter implements Runnable {
 	}
 
 	public void insertData() throws Exception {
-		
+
 		row = queue.take();
-		
-		while (row.size() > 0) {
+
+		while (!row.equals(PosionRow.posionRow)) {
+			dataContext.executeUpdate(insertScript());
 			row = queue.take();
-			if (row.size() > 0) {
-				dataContext.executeUpdate(insertScript());
-			} else {
-				return;
-			}
 		}
 	}
 
@@ -59,7 +56,7 @@ public class DataWriter implements Runnable {
 					if (!column.getColumn().getType().isTimeBased()) {
 						value = row.getValue(column);
 					} else {
-						value = new ElementParser().getDate(row.getValue(column));
+						value = ElementParser.getDate(row.getValue(column));
 					}
 
 					insertData.value(column.getColumn(), value);
