@@ -31,6 +31,10 @@ public class NoSQLImport {
 	public void createDataContext(String url,String user, String password) throws Exception {
 			datacontextSource = new ConnectionCreator().createConnection(url, user, password, null);
 	}
+	
+	public void createDataContext(UpdateableDataContext datacontext) throws Exception {
+		datacontextSource = datacontext;
+}
 
 	public void createDataContextTarget(String url,String user, String password, String type) throws Exception {
 		datacontextTarget = new ConnectionCreator().createConnection(url, user, password, databaseName, type);
@@ -38,10 +42,20 @@ public class NoSQLImport {
 
 	public void startImport() throws Exception {
 		TableReader tableReader = new TableReader(datacontextSource);
+		
 		for (Table table : tableReader.getTables(databaseName)) {
 			createTablesinTargetDatabase(table);
 			importToTarget(table);
 		}
+	}
+	
+	public void startImportVertikal (String tableNames[]) throws Exception {
+		for(String tableName : tableNames){
+			Table sourceTable = datacontextSource.getTableByQualifiedLabel(tableName);
+			createTablesinTargetDatabase(sourceTable);
+			importToTarget(sourceTable);
+		}
+		
 	}
 
 	

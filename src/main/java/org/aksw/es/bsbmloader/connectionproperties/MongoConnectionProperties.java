@@ -25,7 +25,10 @@ public class MongoConnectionProperties extends ConnectionProperties implements C
 		UpdateableDataContext dataContext = new MongoDbDataContext(databaseMongo);
 		return dataContext;
 	}
-	
+
+	/**
+	 * Not Supported
+	 */
 	public void setConnectionProperties(String jdbcurl, String user, String password) throws Exception {
 		throw new Exception("Unsupported");
 

@@ -31,6 +31,11 @@ public class JdbcConnectionProperties implements ConnectionDatabase {
 		if (jdbc.contains("mysql")) {
 			return "com.mysql.jdbc.Driver";
 		}
+		
+		if (jdbc.contains("h2")) {
+			return "org.h2.Driver";
+		}
+
 
 		if (jdbc.contains("postgresql")) {
 			return "org.postgresql.Driver";

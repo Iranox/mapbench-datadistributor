@@ -6,7 +6,7 @@ import org.aksw.es.bsbmloader.connectionproperties.MongoConnectionProperties;
 public class ConnectionBuilder {
 	
 	public ConnectionDatabase createConnectionProperties(String typ){
-		if(typ.equals("mysql")){
+		if(typ.equals("mysql") || typ.equals("h2")){
 			return new JdbcConnectionProperties();
 		}
 		

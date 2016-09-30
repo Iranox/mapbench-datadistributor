@@ -43,6 +43,20 @@ public class EmbeddedH2Server {
 		stmt.executeUpdate(createQ);
 	}
 	
+	public void createSecondTestTable() throws SQLException{
+		Statement stmt = conn.createStatement();
+		String createQ = "CREATE TABLE IF NOT EXISTS helloworld" 
+				+ "(ID INT PRIMARY KEY AUTO_INCREMENT(1,1) NOT NULL, NAME VARCHAR(255))";
+		stmt.executeUpdate(createQ);
+	}
+	
+	public void insertSecondTestData() throws SQLException{
+		Statement stmt = conn.createStatement();
+		String insertQ = "INSERT INTO helloworld VALUES(1,'Hello World!')";
+		stmt.executeUpdate(insertQ);
+		conn.commit();
+	}
+	
 	public void dropTestTable() throws SQLException{
 		Statement stmt = conn.createStatement();
 		String dropQ = "DROP TABLE IF EXISTS " + tab;
@@ -53,8 +67,9 @@ public class EmbeddedH2Server {
 		Statement stmt = conn.createStatement();
 		String dropQ = "DROP TABLE IF EXISTS " + tableName;
 		stmt.executeUpdate(dropQ);
+		dropQ = "DROP TABLE IF EXISTS hello world";
+		stmt.executeUpdate(dropQ);
 	}
-	
 	
 	
 	private void insertTestData() throws SQLException{
