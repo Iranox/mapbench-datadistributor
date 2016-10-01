@@ -21,7 +21,12 @@ public class TableCreator {
 		UpdateScript script = null;
 		script = UpdateScriptWriterHelp.createInsertScript(dataContext, table, typ);
 		dataContext.executeUpdate(script);
-
+	}
+	
+	public void createTableVertical(Table table, String[] columnsName, String id, String type){
+		UpdateScript script = null;
+		script = UpdateScriptWriterHelp.updateScriptVertical(dataContext, table, columnsName, id, type);
+		dataContext.executeUpdate(script);
 	}
 
 	public void createTableWithMoreTargets(Table createSource, UpdateableDataContext[] dataSourceArray) {

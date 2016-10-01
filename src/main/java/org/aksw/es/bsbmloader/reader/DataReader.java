@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
 import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
+import org.apache.metamodel.query.Query;
+import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
 public class DataReader implements Runnable {
@@ -20,6 +22,13 @@ public class DataReader implements Runnable {
 	private final static int BORDER = 50;
 	private int numbers = 0;
 	private boolean isFinish = false;
+	private String id;
+	private String[] columnsnames;
+	
+	public void setColumnes(String id, String...columnNames){
+		this.id = id;
+		this.columnsnames = columnNames;
+	}
 
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
@@ -50,6 +59,23 @@ public class DataReader implements Runnable {
 		queue.put(PosionRow.posionRow);
 		queue.put(PosionRow.posionRow);
 	}
+	
+	private Query readDataVertical(String id,String...columnesName){
+		Column[] col = new Column[columnesName.length + 1] ;
+		int i = 0;
+		for(String column: columnesName){
+			col[i] = table.getColumnByName(column);
+			i++;
+		}
+		col[i] = table.getColumnByName(id);
+		
+		
+		return dataContext.query().from(table).select(col).offset(offset).limit(limit).toQuery();
+	}
+	
+	private Query selectAll(){
+		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).toQuery();
+	}
 
 	private DataSet createDataSet() {
 //		TODO Create function Count for this part
@@ -70,8 +96,9 @@ public class DataReader implements Runnable {
 		if (limit == 0 && !isFinish) {
 			return dataContext.query().from(table).selectAll().execute();
 		}
+		
 
-		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).execute();
+		return dataContext.executeQuery(selectAll());
 
 	}
 

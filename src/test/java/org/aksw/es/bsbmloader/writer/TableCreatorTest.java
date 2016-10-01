@@ -49,6 +49,15 @@ public class TableCreatorTest {
 	}
 	
 	@Test
+	public void testTableCreatorVertical(){
+		creator.setDataContext(createTargetMongo());
+		String[] columnsName = {"Name"};
+		creator.createTableVertical(createSource(), columnsName, "id", null);
+		assertEquals("TESTTABLE", getTableName());
+		deleteMongoDB();
+	}
+	
+	@Test
 	public void testTableCreator(){
 		creator.setDataContext(createTargetMongo());
 		creator.createTable(createSource(), null);
