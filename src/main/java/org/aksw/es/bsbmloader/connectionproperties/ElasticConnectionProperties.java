@@ -26,16 +26,5 @@ public class ElasticConnectionProperties extends ConnectionProperties {
 		client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(getHostname()), 9300));
 		UpdateableDataContext dataContext = new ElasticSearchDataContext((Client) client, indexName);
 		return dataContext;
-
 	}
-	
-	public void test(){
-		   Map<String, Object> metadata = new LinkedHashMap<String, Object>(); 
-	        metadata.put("message", MapBuilder.newMapBuilder().put("type", ColumnType.JAVA_OBJECT).immutableMap()); 
-	        ElasticSearchMetaData metaData = ElasticSearchMetaDataParser.parse(metadata); 
-	        String[] columnNames = metaData.getColumnNames(); 
-	        ColumnType[] columnTypes = metaData.getColumnTypes(); 
-	        System.out.println(columnNames[1] + " " + columnTypes[1]);
-	}
-
 }

@@ -49,7 +49,7 @@ public class JdbcConnectionProperties implements ConnectionDatabase {
 
 	}
 
-	public void setDatabaseName(String name) {
-
+	public void setDatabaseName(String name) throws Exception {
+		throw new Exception("Unsupported");
 	}
 }

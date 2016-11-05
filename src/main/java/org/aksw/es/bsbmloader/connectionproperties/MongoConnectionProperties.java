@@ -13,6 +13,7 @@ public class MongoConnectionProperties extends ConnectionProperties implements C
 	private int port;
 	private String name;
 
+	
 	public void setConnectionProperties(String hostname, String port) throws Exception {
 		this.hostname = hostname;
 		this.port = Integer.parseInt(port);

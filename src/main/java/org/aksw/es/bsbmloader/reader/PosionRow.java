@@ -5,9 +5,9 @@ import org.apache.metamodel.data.Row;
 import org.apache.metamodel.data.Style;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Column;
+import org.junit.Ignore;
 
 public class PosionRow {
-	
 	
 	public static final Row  posionRow = new Row() {
 			

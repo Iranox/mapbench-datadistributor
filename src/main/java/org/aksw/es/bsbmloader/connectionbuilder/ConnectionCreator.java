@@ -7,7 +7,7 @@ import org.apache.metamodel.UpdateableDataContext;
 public class ConnectionCreator {
 	
 
-		public UpdateableDataContext createConnection(String url,String user, String password, String type) throws Exception {
+		public UpdateableDataContext createJDBCConnection(String url,String user, String password, String type) throws Exception {
 		ConnectionDatabase connection = null;
 		if (url != null) {
 			if( url.contains("mysql")){
@@ -26,7 +26,7 @@ public class ConnectionCreator {
 		return null;
 	}
 	
-	public UpdateableDataContext createConnection(String url,String user, String password,String database, String type) throws Exception {
+	public UpdateableDataContext createNoSQLConnection(String url,String user, String password,String database, String type) throws Exception {
 		ConnectionDatabase connection = null;
 		
 		String urlAttribute[] = url.split(":");

@@ -146,11 +146,25 @@ public class Bsbmloader {
 		nosqlMat.setPrimary(pk);
 		nosqlMat.importToTarget(source);
 	}
+	
+	private void startImportHorizontal(String type) throws Exception {
+		NoSQLImport importNosql = new NoSQLImport();
+		importNosql.setDatabaseName(databaseName);
+		importNosql.createDataContext(sourceUrl, user, password, type);
+		importNosql.createDataContextTarget(targetUrl, user, password, type);
+		if (tables.size() != 0) {
+			importNosql.startImportVertikal(tables.toArray(new String[tables.size()]));
+		} else {
+			importNosql.startImport();
+
+		}
+	}
+
 
 	private void startImport(String type) throws Exception {
 		NoSQLImport importNosql = new NoSQLImport();
 		importNosql.setDatabaseName(databaseName);
-		importNosql.createDataContext(sourceUrl, user, password);
+		importNosql.createDataContext(sourceUrl, user, password,type);
 		importNosql.createDataContextTarget(targetUrl, user, password, type);
 		if (tables.size() != 0) {
 			importNosql.startImportVertikal(tables.toArray(new String[tables.size()]));

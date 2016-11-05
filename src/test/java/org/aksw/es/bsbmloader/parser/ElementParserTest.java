@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ElementParserTest {
 	
@@ -15,6 +16,12 @@ public class ElementParserTest {
 	@Before
 	public void setup() {
 		utilDate = new Date();
+	}
+	
+	@Test
+	public void testCreateClass(){
+		ElementParser ele = new ElementParser();
+		assertNotNull(ele);
 	}
 	
 	@Test

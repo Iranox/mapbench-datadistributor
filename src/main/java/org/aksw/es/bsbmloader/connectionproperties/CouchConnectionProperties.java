@@ -1,12 +1,13 @@
 package org.aksw.es.bsbmloader.connectionproperties;
 
+import org.aksw.es.bsbmloader.connectionbuilder.ConnectionDatabase;
 import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.couchdb.CouchDbDataContext;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 
-public class CouchConnectionProperties extends ConnectionProperties {
+public class CouchConnectionProperties extends ConnectionProperties implements ConnectionDatabase {
 
 	public void setConnectionProperties(String hostname, String port) throws Exception {
 		setHostname(hostname);
@@ -20,6 +21,24 @@ public class CouchConnectionProperties extends ConnectionProperties {
 		
 		UpdateableDataContext dataContext = new CouchDbDataContext(couchDbInstance);
 		return dataContext;
+	}
+
+
+	public void setDatabaseName(String name) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public UpdateableDataContext getDB() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public void setConnectionProperties(String jdbcurl, String user, String password) throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
