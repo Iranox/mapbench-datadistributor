@@ -17,7 +17,7 @@ public class Import {
 	private CountDownLatch latch;
 	private Table target;
 	private String primary;
-	
+
 	public void setPrimary(String primary) {
 		this.primary = primary;
 	}
@@ -32,28 +32,52 @@ public class Import {
 
 	/**
 	 * Connection to source database
+	 * 
 	 * @param url
 	 * @param user
 	 * @param password
 	 * @param type
 	 * @throws Exception
 	 */
-	public void createDataContext(String url,String user, String password, String type) throws Exception {
+	public void createDataContext(String url, String user, String password, String type) throws Exception {
 		datacontextSource = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
 	}
-	
-	public void setDataContext(UpdateableDataContext datacontext){
-		this.datacontextSource = datacontext;
+
+	/**
+	 * Connection to a jdbc database
+	 * 
+	 * @param url
+	 * @param user
+	 * @param password
+	 * @throws Exception
+	 */
+	public void createDataContext(String url, String user, String password) throws Exception {
+		datacontextSource = new ConnectionCreator().createJDBCConnection(url, user, password);
 	}
 
-	public void createDataContextTarget(String url,String user, String password, String type) throws Exception {
-		firstDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
-		secondDatacontextTarget =new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
-	    thirdDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
+	public void setDataContext(UpdateableDataContext datacontext) {
+		this.datacontextSource = datacontext;
 	}
 	
-	public void setTargetTable(String tableName){
-		 target = firstDatacontextTarget.getTableByQualifiedLabel(tableName);
+	/**
+	 * Create three datacontexts with the target database
+	 * 
+	 * @param url
+	 * @param user
+	 * @param password
+	 * @param type
+	 * @throws Exception
+	 */
+
+	public void createDataContextTarget(String url, String user, String password, String type) throws Exception {
+		firstDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
+		secondDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName,
+				type);
+		thirdDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
+	}
+
+	public void setTargetTable(String tableName) {
+		target = firstDatacontextTarget.getTableByQualifiedLabel(tableName);
 	}
 
 	public UpdateableDataContext getDatacontextSource() {
@@ -95,8 +119,5 @@ public class Import {
 	public String getPrimary() {
 		return primary;
 	}
-	
-	
-
 
 }
