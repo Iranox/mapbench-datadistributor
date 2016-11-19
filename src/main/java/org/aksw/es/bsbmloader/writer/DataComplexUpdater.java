@@ -40,13 +40,14 @@ public class DataComplexUpdater implements Runnable {
 	}
 
 	public void insertData() throws Exception {
-		while (((complexDataObject = queue.take())) == POSION) {
+		while (((complexDataObject = queue.take())) != POSION) {
 			if (complexDataObject.getPrimaryValue().size() > 0) {
 				dataContext.executeUpdate(insertComplexData());
 			} else {
 				return;
 			}
 		}
+		
 		dataContext.executeUpdate(insertComplexData());
 
 	}
@@ -59,8 +60,11 @@ public class DataComplexUpdater implements Runnable {
 				RowInsertionBuilder insertRow = callback.insertInto(targetTable);
 				for (SelectItem column : complexDataObject.getPrimaryValue().getSelectItems()) {
 					insertRow.value(column.getColumn().getName(), complexDataObject.getPrimaryValue().getValue(column));
+					
 				}
 				insertRow.value(forgeinKey, createDataObject(complexDataObject.getArrayData()));
+				System.out.println("insert: " +   insertRow.toSql());
+				insertRow.execute();
 			}
 		};
 		return update;

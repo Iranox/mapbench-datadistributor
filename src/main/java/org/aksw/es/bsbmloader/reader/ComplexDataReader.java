@@ -5,13 +5,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
-import org.apache.metamodel.DataContext;
+import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 
 public class ComplexDataReader implements Runnable {
-	private DataContext dataContext;
+	private UpdateableDataContext dataContext;
 	private BlockingQueue<ComplexData> queueComplexData = null;
 	private static org.apache.log4j.Logger log = Logger.getLogger(ComplexDataReader.class);
 	private CountDownLatch latch;
@@ -39,7 +39,7 @@ public class ComplexDataReader implements Runnable {
 		this.secondSource = secondSource;
 	}
 
-	public ComplexDataReader(DataContext dataContext, BlockingQueue<ComplexData> queueComplexData,
+	public ComplexDataReader(UpdateableDataContext dataContext, BlockingQueue<ComplexData> queueComplexData,
 			CountDownLatch latch) {
 		super();
 		this.dataContext = dataContext;
@@ -52,7 +52,7 @@ public class ComplexDataReader implements Runnable {
 		this.latch = latch;
 	}
 
-	public void setDataContext(DataContext dataContext) {
+	public void setDataContext(UpdateableDataContext dataContext) {
 		this.dataContext = dataContext;
 	}
 
@@ -68,6 +68,7 @@ public class ComplexDataReader implements Runnable {
 
 	public void readComplexData() throws Exception {
 		Column primaryColumn = dataContext.getTableByQualifiedLabel(joinTable).getColumnByName(secondFkey);
+		System.out.println(dataContext.query().from(joinTable).select(primaryColumn).groupBy(primaryColumn).toQuery().toString());
 		DataSet dataSet = dataContext.query().from(joinTable).select(primaryColumn).groupBy(primaryColumn).execute();
 		while (dataSet.next()) {
 
@@ -75,10 +76,13 @@ public class ComplexDataReader implements Runnable {
 			Object dataValue = dataSet.getRow().getValue(primaryColumn);
 			DataSet dataSetArray = dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
 					.eq(dataValue).execute();
+			System.out.println( dataContext.query().from(joinTable).select(forgeinKey).where(primaryColumn)
+					.eq(dataValue).toQuery().toSql());
 			readDataSet(dataSetArray);
 			ComplexData complexDataObject = new ComplexData(dataSet.getRow(), arrayData);
 			queueComplexData.put(complexDataObject);
 			dataSetArray.close();
+//			dataContext.executeUpdate();
 
 		}
 		insertPosion();

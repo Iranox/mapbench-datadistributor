@@ -11,56 +11,85 @@ import org.aksw.es.bsbmloader.reader.TableReader;
 import org.aksw.es.bsbmloader.writer.DataWriter;
 import org.aksw.es.bsbmloader.writer.TableCreator;
 
-import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.jdbc.JdbcDataContext;
 import org.apache.metamodel.schema.Table;
 
 public class NoSQLImport extends Import {
 
-	private UpdateableDataContext[] dataContexts = null;
 	private BlockingQueue<Row> queue;
+	private TableCreator tableCreator = new TableCreator();
 	private CountDownLatch latch;
+	private ExecutorService executor;
+	private String columnName;
+	private int key;
+	private int result;
+	private final static int NUMBEROFTHREADS = 4;
+
+	public NoSQLImport() {
+		queue = new ArrayBlockingQueue<Row>(getBORDER());
+		executor = Executors.newFixedThreadPool(NUMBEROFTHREADS);
+		latch = new CountDownLatch(NUMBEROFTHREADS);
+	}
 	
-	public void createTargetDatacontexts (String url[],String user[], String password[], String type[]){
-		
+	public void setHorzitalData(String columnName, int key, int result){
+		this.key = key;
+		this.result = result;
+		this.columnName = columnName;
 	}
 
 	public void startImport() throws Exception {
 		TableReader tableReader = new TableReader(getDatacontextSource());
-		
+
 		for (Table table : tableReader.getTables(getDatabaseName())) {
 			createTablesinTargetDatabase(table);
 			importToTarget(table);
 		}
 	}
-	
-	public void startImportVertikal (String tableNames[]) throws Exception {
-		for(String tableName : tableNames){
+
+	public void startImportVertikal(String tableNames[]) throws Exception {
+		for (String tableName : tableNames) {
 			Table sourceTable = getDatacontextSource().getTableByQualifiedLabel(tableName);
 			createTablesinTargetDatabase(sourceTable);
 			importToTarget(sourceTable);
 		}
-		
+
 	}
-	
-	public void createTablesinTargetDatabase(Table table) throws Exception {
-		TableCreator tableCreator = new TableCreator();
+
+	public void startHorizontalImport(String tableNames[]) throws Exception {
+		for (String tableName : tableNames) {
+			Table sourceTable = getDatacontextSource().getTableByQualifiedLabel(tableName);
+			createTablesinTargetDatabase(sourceTable);
+			importToTargetHori(sourceTable);
+		}
+	}
+
+	private void createTablesinTargetDatabase(Table table) throws Exception {
 		tableCreator.setDataContext(getFirstDatacontextTarget());
 		tableCreator.createTable(table, null);
-//		datacontextTarget = tableCreator.getDataContext();
+		// datacontextTarget = tableCreator.getDataContext();
 
+	}
+
+	public void importToTargetHori(Table table) throws Exception {
+		
+		executor.execute(createDataReaderHori(table, latch));
+		executor.execute(createDataWriter(table, latch));
+		executor.execute(createDataWriter(table, latch));
+		executor.execute(createDataWriter(table, latch));
+
+		latch.await();
+		executor.shutdown();
 	}
 
 	public void importToTarget(Table table) throws Exception {
-		queue = new ArrayBlockingQueue<Row>(getBORDER());
-		ExecutorService executor = Executors.newFixedThreadPool(4);
-		latch = new CountDownLatch(4);
-
+		executor = Executors.newFixedThreadPool(NUMBEROFTHREADS);
+		latch = new CountDownLatch(NUMBEROFTHREADS);
+		
 		executor.execute(createDataReader(table, latch));
 		executor.execute(createDataWriter(table, latch));
 		executor.execute(createDataWriter(table, latch));
-		executor.execute(createDataWriter(table, latch));
+		executor.execute(createDataWriter(table, latch)); 
 
 		latch.await();
 		executor.shutdown();
@@ -77,6 +106,21 @@ public class NoSQLImport extends Import {
 
 	}
 
+	private DataReader createDataReaderHori(Table table, CountDownLatch latch) throws Exception {
+		DataReader dataReader = new DataReader();
+		dataReader.setDataContext(getDatacontextSource());
+		dataReader.setColumnName(columnName);
+		dataReader.setHorizontal(true);
+		dataReader.setKey(key);
+		dataReader.setResult(result);
+		dataReader.setQueue(queue);
+		dataReader.setTable(table);
+		dataReader.setLatch(latch);
+		dataReader.setColumnName(columnName);
+		return dataReader;
+
+	}
+
 	private DataWriter createDataWriter(Table table, CountDownLatch latch) throws Exception {
 		DataWriter dataWriter = new DataWriter();
 		dataWriter.setQueue(queue);
@@ -88,7 +132,7 @@ public class NoSQLImport extends Import {
 
 	public void createDataContext(JdbcDataContext datacontext) {
 		setDataContext(datacontext);
-		
+
 	}
 
 }

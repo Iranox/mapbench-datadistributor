@@ -21,7 +21,29 @@ public class DataReader implements Runnable {
 	private final static int BORDER = 50;
 	private int numbers = 0;
 	private boolean isFinish = false;
+	private int key = 0;
+	private int result = 0;
+	private boolean horizontal = false;
+	private String columnName;
 	
+	
+	
+
+	public void setKey(int key) {
+		this.key = key;
+	}
+
+	public void setResult(int result) {
+		this.result = result;
+	}
+
+	public void setHorizontal(boolean horizontal) {
+		this.horizontal = horizontal;
+	}
+
+	public void setColumnName(String columnName) {
+		this.columnName = columnName;
+	}
 
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
@@ -52,14 +74,12 @@ public class DataReader implements Runnable {
 		queue.put(PosionRow.posionRow);
 		queue.put(PosionRow.posionRow);
 	}
-	
 
-	private Query selectAll(){
+	private Query selectAll() {
 		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).toQuery();
 	}
 
 	private DataSet createDataSet() {
-//		TODO Create function Count for this part
 		if (numbers == 0 && !isFinish) {
 			DataSet number = dataContext.query().from(table).selectCount().execute();
 			number.next();
@@ -68,17 +88,10 @@ public class DataReader implements Runnable {
 			limit = BORDER;
 			number.close();
 		}
-//		Refactor ///////////////////////////////////////////////////////
-
-
-		if (numbers > BORDER && !isFinish) {
-			this.limit = BORDER;
-		}
 
 		if (limit == 0 && !isFinish) {
 			return dataContext.query().from(table).selectAll().execute();
-		}
-		
+		} 
 
 		return dataContext.executeQuery(selectAll());
 
@@ -95,6 +108,7 @@ public class DataReader implements Runnable {
 			setNewOffset();
 			dataSet = createDataSet();
 		}
+		
 
 		insertPosion();
 	}
@@ -102,20 +116,31 @@ public class DataReader implements Runnable {
 	private void setNewOffset() {
 		offset += BORDER;
 		numbers -= BORDER;
-		if (numbers < BORDER) {
+		if (numbers < BORDER && numbers <= 0) {
 			numbers = 0;
 			isFinish = true;
-		} 
+		}
 	}
 
 	private void insertRowIntoBlockingQueue(DataSet dataset) throws InterruptedException {
 		while (dataset.next()) {
-			
 			Row row = dataset.getRow();
 			row.getSelectItems();
-			queue.put(dataset.getRow());
+			if (!horizontal) {
+				queue.put(row);
+			} else {
+				if (isKey(row)) {
+					queue.put(row);
+				}
+
+			}
+
 		}
 
+	}
+
+	private boolean isKey(Row row) {
+		return ((Integer) row.getValue(table.getColumnByName(columnName)) % key == result);
 	}
 
 	public void run() {

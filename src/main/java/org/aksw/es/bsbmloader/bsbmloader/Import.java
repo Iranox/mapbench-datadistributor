@@ -73,7 +73,7 @@ public class Import {
 		firstDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
 		secondDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName,
 				type);
-		thirdDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type);
+		thirdDatacontextTarget = new ConnectionCreator().createNoSQLConnection(url, user, password, databaseName, type); 
 	}
 
 	public void setTargetTable(String tableName) {

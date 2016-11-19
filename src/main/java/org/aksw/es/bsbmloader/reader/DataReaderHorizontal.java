@@ -9,7 +9,7 @@ import org.apache.metamodel.data.DataSet;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Table;
 
-public class DataReaderHorizontal implements Runnable {
+public class DataReaderHorizontal   {
 
 	private DataContext source;
 	private BlockingQueue<Row>[] queue = null;
@@ -20,7 +20,7 @@ public class DataReaderHorizontal implements Runnable {
 	private Table table;
 	private CountDownLatch latch;
 	
-	private final static int OFFSET_NUMBER = 200;
+	/**private final static int OFFSET_NUMBER = 200;
 
 	private static org.apache.log4j.Logger log = Logger.getLogger(DataReaderHorizontal.class);
 
@@ -37,10 +37,10 @@ public class DataReaderHorizontal implements Runnable {
 			totalDataSetNumber -= OFFSET_NUMBER;
 		}
 	
-	}
+	}**/
 	
 	// TODO rename function
-	private void getData() throws Exception {
+	/*private void getData() throws Exception {
 		DataSet ds = source.query().from(table).selectAll().limit(limit).offset(offset).execute();
 		while (ds.next()) {
 			queue[chooseDatacontext()].put(ds.getRow());
@@ -63,9 +63,9 @@ public class DataReaderHorizontal implements Runnable {
 	
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
-	}
+	}*/
 
-	public void run() {
+	/**public void run() {
 		try {
 			readData();
 			latch.countDown();
@@ -73,7 +73,7 @@ public class DataReaderHorizontal implements Runnable {
 			log.error(e);
 		}
 		
-	}
+	}**/
 
 
 }
