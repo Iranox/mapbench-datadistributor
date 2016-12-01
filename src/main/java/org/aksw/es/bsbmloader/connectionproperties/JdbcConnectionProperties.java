@@ -21,6 +21,7 @@ public class JdbcConnectionProperties implements ConnectionDatabase {
 	public UpdateableDataContext getDB() throws Exception {
 		Class.forName(getClassName(jdbcurl));
 		Connection connection = DriverManager.getConnection(jdbcurl, user, password);
+		connection.setAutoCommit(false);
 		UpdateableDataContext dataContext = new JdbcDataContext(connection);
 		return dataContext;
 

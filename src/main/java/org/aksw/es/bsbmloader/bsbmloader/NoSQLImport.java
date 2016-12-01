@@ -13,6 +13,7 @@ import org.aksw.es.bsbmloader.writer.TableCreator;
 
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.jdbc.JdbcDataContext;
+import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
 import org.apache.metamodel.schema.Table;
 
 public class NoSQLImport extends Import {
@@ -25,6 +26,11 @@ public class NoSQLImport extends Import {
 	private int key;
 	private int result;
 	private final static int NUMBEROFTHREADS = 4;
+	private String type;
+	
+	public void setType(String type){
+		this.type = type;
+	}
 
 	public NoSQLImport() {
 		queue = new ArrayBlockingQueue<Row>(getBORDER());
@@ -66,7 +72,12 @@ public class NoSQLImport extends Import {
 
 	private void createTablesinTargetDatabase(Table table) throws Exception {
 		tableCreator.setDataContext(getFirstDatacontextTarget());
-		tableCreator.createTable(table, null);
+		if(!type.equals("jdbc")){
+			tableCreator.createTable(table, null);
+		}else{
+			tableCreator.createTable(table, new MysqlQueryRewriter((JdbcDataContext) getFirstDatacontextTarget()));
+		}
+		
 		// datacontextTarget = tableCreator.getDataContext();
 
 	}

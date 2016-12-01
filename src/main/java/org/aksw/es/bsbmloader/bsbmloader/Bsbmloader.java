@@ -18,6 +18,39 @@ public class Bsbmloader extends MainParams {
 	}
 
 	private void interpretCommandLine() throws Exception {
+		interpret(importJdbc, "jdbc");
+		interpret(importMongodb, "mongodb");
+		materalize(materializeMongo, "mongodb");
+	}
+	
+	private void interpret(boolean importType, String type) throws Exception{
+		if (importType) {
+			log.info("Import to " + type);
+			if(horizontal){
+				startImportHorizontal(type);
+			}else{
+				startImport(type);
+			}
+			log.info("Done");
+		}
+	}
+	
+	private void materalize(boolean importType, String type) throws Exception{
+
+		if (materializeMongo && join == null) {
+			log.info("Import to " + type);
+			startMat(type);
+			log.info("Done");
+		}
+
+		if (materializeMongo && join != null) {
+			log.info("Import to " + type);
+			startMatComplex("type");
+			log.info("Done");
+		}
+	}
+	
+	private void interpretMongodb() throws Exception{
 		if (importMongodb && !horizontal) {
 			log.info("Import to MongoDB");
 			startImport("mongodb");
@@ -76,12 +109,14 @@ public class Bsbmloader extends MainParams {
 		importNosql.setDatabaseName(databaseName);
 		importNosql.createDataContext(sourceUrl, user, password);
 		importNosql.createDataContextTarget(targetUrl, user, password, type);
+		importNosql.setType(type);
 		importNosql.setHorzitalData(column, key, result);
 		importNosql.startHorizontalImport(tables.toArray(new String[tables.size()]));
 	}
 	
 	private void startImport(String type) throws Exception {
 		NoSQLImport importNosql = new NoSQLImport();
+		importNosql.setType(type);
 		importNosql.setDatabaseName(databaseName);
 		importNosql.createDataContext(sourceUrl, user, password);
 		importNosql.createDataContextTarget(targetUrl, user, password, type);

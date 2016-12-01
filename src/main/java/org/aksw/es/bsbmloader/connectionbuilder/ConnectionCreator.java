@@ -29,6 +29,10 @@ public class ConnectionCreator {
 	public UpdateableDataContext createNoSQLConnection(String url,String user, String password,String database, String type) throws Exception {
 		ConnectionDatabase connection = null;
 		
+		if(type.equals("jdbc")){
+			return createJDBCConnection(url, user, password);
+		}
+		
 		String urlAttribute[] = url.split(":");
 		String port = urlAttribute[1];
 		String host = urlAttribute[0];

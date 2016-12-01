@@ -11,35 +11,36 @@ import org.apache.metamodel.schema.Table;
 
 public class UpdateScriptWriterHelp {
 	private final static int NUMBER = 3000;
-	
-	private UpdateScriptWriterHelp(){
-		
+
+	private UpdateScriptWriterHelp() {
+
 	}
-	
-	public static UpdateScript updateScriptVertical(final DataContext dataContext, final Table table, final String[] columnsName, final String id, final String type) {
-		if(type == null){
+
+	public static UpdateScript updateScriptVertical(final DataContext dataContext, final Table table,
+			final String[] columnsName, final String id, final String type) {
+		if (type == null) {
 			return updateScriptVertical(dataContext, table, columnsName, id);
 		}
 		return null;
-		
+
 	}
-	
-	public static UpdateScript createInsertScript(final DataContext dataContext, final Table table, final IQueryRewriter typ){
-		if(typ == null){
+
+	public static UpdateScript createInsertScript(final DataContext dataContext, final Table table,
+			final IQueryRewriter typ) {
+		if (typ == null) {
 			return updateScript(dataContext, table);
 		}
-		
+
 		return updateScriptWithIQueryRewriter(dataContext, table, typ);
 	}
 
 	private static UpdateScript updateScript(final DataContext dataContext, final Table table) {
 
 		UpdateScript updateScript = new UpdateScript() {
-			
+
 			private TableCreationBuilder tableCreation = null;
 
 			public void run(UpdateCallback callback) {
-				
 
 				tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
 				for (Column column : table.getColumns()) {
@@ -56,21 +57,21 @@ public class UpdateScriptWriterHelp {
 		};
 		return updateScript;
 	}
-	
-	private static UpdateScript updateScriptVertical(final DataContext dataContext, final Table table, final String[] columnsName, final String id) {
+
+	private static UpdateScript updateScriptVertical(final DataContext dataContext, final Table table,
+			final String[] columnsName, final String id) {
 
 		UpdateScript updateScript = new UpdateScript() {
-			
+
 			private TableCreationBuilder tableCreation = null;
 
 			public void run(UpdateCallback callback) {
-				
 
 				tableCreation = callback.createTable(dataContext.getDefaultSchema(), table.getName());
 				tableCreation.withColumn(id).ofType(table.getColumnByName(id).getType());
 				for (String column : columnsName) {
-						tableCreation.withColumn(column).ofType(table.getColumnByName(id).getType());
-					
+					tableCreation.withColumn(column).ofType(table.getColumnByName(id).getType());
+
 				}
 				tableCreation.execute();
 
@@ -80,8 +81,8 @@ public class UpdateScriptWriterHelp {
 		return updateScript;
 	}
 
-
-	private static UpdateScript updateScriptWithIQueryRewriter(final DataContext dataContext, final Table table, final IQueryRewriter typ) {
+	private static UpdateScript updateScriptWithIQueryRewriter(final DataContext dataContext, final Table table,
+			final IQueryRewriter typ) {
 
 		UpdateScript updateScript = new UpdateScript() {
 
@@ -98,6 +99,7 @@ public class UpdateScriptWriterHelp {
 							tableCreation.withColumn(column.getName())
 									.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
 						}
+
 					} else {
 						tableCreation.withColumn(column.getName())
 								.ofNativeType(typ.rewriteColumnType(column.getType(), null));
