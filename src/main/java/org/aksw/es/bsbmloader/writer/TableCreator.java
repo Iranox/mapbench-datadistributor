@@ -19,8 +19,14 @@ public class TableCreator {
 
 	public void createTable(Table table, final IQueryRewriter typ) {
 		UpdateScript script = null;
-		script = UpdateScriptWriterHelp.createInsertScript(dataContext, table, typ);
-		dataContext.executeUpdate(script);
+		if(dataContext.getTableByQualifiedLabel(table.getName()) != null){
+			return;
+		}
+		else{
+			script = UpdateScriptWriterHelp.createInsertScript(dataContext, table, typ);
+			dataContext.executeUpdate(script);
+		}
+		
 	}
 	
 	public void createTableVertical(Table table, String[] columnsName, String id, String type){

@@ -87,6 +87,7 @@ public class UpdateScriptWriterHelp {
 		UpdateScript updateScript = new UpdateScript() {
 
 			public void run(UpdateCallback callback) {
+				
 
 				TableCreationBuilder tableCreation = callback.createTable(dataContext.getDefaultSchema(),
 						table.getName());
@@ -97,11 +98,11 @@ public class UpdateScriptWriterHelp {
 									.ofNativeType(typ.rewriteColumnType(column.getType(), column.getColumnSize()));
 						} else {
 							tableCreation.withColumn(column.getName())
-									.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null));
+									.ofNativeType(typ.rewriteColumnType(ColumnType.STRING, null)).nullable(true);
 						}
 
 					} else {
-						tableCreation.withColumn(column.getName())
+						tableCreation.withColumn(column.getName()).nullable(true)
 								.ofNativeType(typ.rewriteColumnType(column.getType(), null));
 
 					}
