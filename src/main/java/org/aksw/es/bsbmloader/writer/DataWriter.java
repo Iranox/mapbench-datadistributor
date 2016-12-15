@@ -13,12 +13,21 @@ import org.apache.metamodel.insert.RowInsertionBuilder;
 import org.apache.metamodel.query.SelectItem;
 import org.apache.metamodel.schema.Table;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+
 public class DataWriter implements Runnable {
 	private BlockingQueue<Row> queue = null;
 	private UpdateableDataContext dataContext;
 	private Row row;
+	 private  final MetricRegistry metrics;
 	private Table table;
 	private CountDownLatch latch;
+	
+	public DataWriter( MetricRegistry metrics ){
+		this.metrics = metrics;
+		
+	}
 
 	public void setLatch(CountDownLatch latch) {
 		this.latch = latch;
@@ -37,11 +46,13 @@ public class DataWriter implements Runnable {
 	}
 
 	public void insertData() throws Exception {
+		Meter requests = metrics.meter("write threads" );
 
 		row = queue.take();
 
 		while (!row.equals(PosionRow.posionRow)) {
 			dataContext.executeUpdate(insertScript());
+			requests.mark();
 			row = queue.take();
 		}
 	}

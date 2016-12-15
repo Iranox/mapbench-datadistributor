@@ -50,32 +50,6 @@ public class Bsbmloader extends MainParams {
 		}
 	}
 	
-	private void interpretMongodb() throws Exception{
-		if (importMongodb && !horizontal) {
-			log.info("Import to MongoDB");
-			startImport("mongodb");
-			log.info("Done");
-		}
-		
-		if(importMongodb && horizontal){
-			log.info("Import to MongoDB");
-			startImportHorizontal("mongodb");
-			log.info("Done");
-		}
-
-		if (materializeMongo && join == null) {
-			log.info("Import to MongoDB");
-			startMat("mongodb");
-			log.info("Done");
-		}
-
-		if (materializeMongo && join != null) {
-			log.info("Import to MongoDB");
-			startMatComplex("mongodb");
-			log.info("Done");
-		}
-
-	}
 	
 	private void startMatComplex(String type) throws Exception {
 		NoSQLMatComplex nosqlMat = new NoSQLMatComplex();

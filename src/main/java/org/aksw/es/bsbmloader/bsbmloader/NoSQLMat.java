@@ -13,10 +13,13 @@ import org.apache.metamodel.data.Row;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
+import com.codahale.metrics.MetricRegistry;
+
 public class NoSQLMat extends Import{
 	
 	private BlockingQueue<Row> queue;
 	private CountDownLatch latch;
+	static final MetricRegistry metrics = new MetricRegistry();
 	
 
 	public void importToTarget(String table) throws Exception {
@@ -35,7 +38,7 @@ public class NoSQLMat extends Import{
 	}
 
 	private DataReader createDataReader(Table table, CountDownLatch latch) throws Exception {
-		DataReader dataReader = new DataReader();
+		DataReader dataReader = new DataReader(metrics);
 		dataReader.setDataContext(getDatacontextSource());
 		dataReader.setQueue(queue);
 		dataReader.setTable(table);

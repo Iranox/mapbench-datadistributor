@@ -31,7 +31,7 @@ public class DataWriterTest {
 	private final static int MAXIMALTHREADS = 2;
 	private final static String TESTTABLENAME = "TESTTABLE";
 	private final static String TESTDATABASENAME = "test";
-
+/**
 	@Before
 	public void setup() throws Exception {
 		queue = new ArrayBlockingQueue<Row>(100);
@@ -89,6 +89,6 @@ public class DataWriterTest {
 		writer.setTable(source.getTableByQualifiedLabel(TESTTABLENAME));
 		writer.setUpdateableDataContext(target);
 		writer.setQueue(queue);
-	}
+	} **/
 
 }
