@@ -99,5 +99,8 @@ public class MainParams {
 
 	@Parameter(names = "-tables", description = "The tables")
 	public List<String> tables = new ArrayList<String>();
+	
+	@Parameter(names = "-threads", description = "The tables")
+	public int threads = 3;
 
 }

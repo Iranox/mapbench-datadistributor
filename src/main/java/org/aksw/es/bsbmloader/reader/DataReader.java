@@ -34,6 +34,11 @@ public class DataReader implements Runnable {
 	private Column hashedColumn;
 	private  final MetricRegistry metrics;
 	private Meter requests;
+	private int threads;
+	
+	public void setThreads(int threads){
+		this.threads = threads;
+	}
 	
 	public DataReader(MetricRegistry metrics){
 		this.metrics = metrics;
@@ -81,9 +86,10 @@ public class DataReader implements Runnable {
 	}
 
 	private void insertPosion() throws Exception {
-		queue.put(PosionRow.posionRow);
-		queue.put(PosionRow.posionRow);
-		queue.put(PosionRow.posionRow);
+		for(int i = 0; i < threads;i++){
+			queue.put(PosionRow.posionRow);	
+		}
+	
 	}
 
 	private Query selectAll() {

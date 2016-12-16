@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.aksw.es.bsbmloader.embeddedH2Server.EmbeddedH2Server;
 import org.aksw.es.bsbmloader.embeddedmongoserver.EmbeddedMongoServer;
-
+import org.aksw.es.bsbmloader.importer.NoSQLImport;
 import org.apache.metamodel.jdbc.JdbcDataContext;
 import org.junit.After;
 import org.junit.Before;

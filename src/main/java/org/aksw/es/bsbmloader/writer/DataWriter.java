@@ -47,6 +47,7 @@ public class DataWriter implements Runnable {
 
 	public void insertData() throws Exception {
 		Meter requests = metrics.meter("write threads" );
+		dataContext.refreshSchemas();
 
 		row = queue.take();
 
@@ -69,7 +70,6 @@ public class DataWriter implements Runnable {
 					} else {
 						value = ElementParser.getDate(row.getValue(column));
 					}
-
 					insertData.value(column.getColumn(), value);
 				}
 				insertData.execute();

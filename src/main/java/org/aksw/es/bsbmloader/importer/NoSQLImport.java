@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.bsbmloader;
+package org.aksw.es.bsbmloader.importer;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -11,7 +11,7 @@ import org.aksw.es.bsbmloader.reader.DataReader;
 import org.aksw.es.bsbmloader.reader.TableReader;
 import org.aksw.es.bsbmloader.writer.DataWriter;
 import org.aksw.es.bsbmloader.writer.TableCreator;
-import org.apache.log4j.Logger;
+import org.apache.metamodel.UpdateableDataContext;
 import org.apache.metamodel.data.Row;
 import org.apache.metamodel.jdbc.JdbcDataContext;
 import org.apache.metamodel.jdbc.dialects.MysqlQueryRewriter;
@@ -29,15 +29,11 @@ public class NoSQLImport extends Import {
 	private String columnName;
 	private int key;
 	private int result;
-	private final static int NUMBEROFTHREADS = 4;
 	static final MetricRegistry metrics = new MetricRegistry();
-	private static org.apache.log4j.Logger log = Logger.getLogger(NoSQLImport.class);
 	private String type;
 	
 	public NoSQLImport() {
 		queue = new ArrayBlockingQueue<Row>(getBORDER());
-	
-		
 		tableCreator = new TableCreator();
 	}
 	
@@ -87,15 +83,15 @@ public class NoSQLImport extends Import {
 	}
 
 	public void importToTarget(Table table) throws Exception {
-		latch = new CountDownLatch(NUMBEROFTHREADS);
-		executor = Executors.newFixedThreadPool(NUMBEROFTHREADS);
+		latch = new CountDownLatch(getThreadsNumber()+1);
+		executor = Executors.newFixedThreadPool(getThreadsNumber()+1);
 		startReport();
 		
 		executor.execute(createDataReader(table, latch));
-		executor.execute(createDataWriter(table, latch));
-		executor.execute(createDataWriter(table, latch));
-		executor.execute(createDataWriter(table, latch)); 
-
+		for(UpdateableDataContext target : getTargetDataContext()){
+			executor.execute(createDataWriter(table, latch,target)); 
+		}
+		
 		latch.await();
 		executor.shutdown();
 
@@ -103,13 +99,15 @@ public class NoSQLImport extends Import {
 
 	public void importToTargetHori(Table table) throws Exception {
 		startReport();
-		executor = Executors.newFixedThreadPool(NUMBEROFTHREADS);
-		latch = new CountDownLatch(NUMBEROFTHREADS);
+		executor = Executors.newFixedThreadPool(getThreadsNumber()+1);
+		latch = new CountDownLatch(getThreadsNumber()+1);
 		
 		executor.execute(createDataReaderHori(table, latch));
-		executor.execute(createDataWriter(table, latch));
-		executor.execute(createDataWriter(table, latch));
-		executor.execute(createDataWriter(table, latch));
+		for(UpdateableDataContext target : getTargetDataContext()){
+			executor.execute(createDataWriter(table, latch,target)); 
+			
+		}
+
 	
 		latch.await();
 		executor.shutdown();
@@ -126,6 +124,7 @@ public class NoSQLImport extends Import {
 		dataReader.setQueue(queue);
 		dataReader.setTable(table);
 		dataReader.setLatch(latch);
+		dataReader.setThreads(getThreadsNumber());
 		return dataReader;
 
 	}
@@ -141,16 +140,19 @@ public class NoSQLImport extends Import {
 		dataReader.setTable(table);
 		dataReader.setLatch(latch);
 		dataReader.setColumnName(columnName);
+		dataReader.setThreads(getThreadsNumber());
 		return dataReader;
 
 	}
 
-	private DataWriter createDataWriter(Table table, CountDownLatch latch) throws Exception {
+	private DataWriter createDataWriter(Table table, CountDownLatch latch, UpdateableDataContext datacontext) throws Exception {
 		DataWriter dataWriter = new DataWriter(metrics);
 		dataWriter.setQueue(queue);
 		dataWriter.setTable(table);
-		dataWriter.setUpdateableDataContext(getFirstDatacontextTarget());
+		dataWriter.setUpdateableDataContext(datacontext);
 		dataWriter.setLatch(latch);
+		
+		
 		return dataWriter;
 	}
 

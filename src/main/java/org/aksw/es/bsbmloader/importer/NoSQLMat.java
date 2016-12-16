@@ -1,4 +1,4 @@
-package org.aksw.es.bsbmloader.bsbmloader;
+package org.aksw.es.bsbmloader.importer;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -24,14 +24,14 @@ public class NoSQLMat extends Import{
 
 	public void importToTarget(String table) throws Exception {
 		queue = new ArrayBlockingQueue<Row>(getBORDER());
-		ExecutorService executor = Executors.newFixedThreadPool(4);
-		latch = new CountDownLatch(4);
+		ExecutorService executor = Executors.newFixedThreadPool(getThreadsNumber()+1);
+		latch = new CountDownLatch(getThreadsNumber()+1);
 		
 		executor.execute(createDataReader(getDatacontextSource().getTableByQualifiedLabel(table), latch));
-		executor.execute(createDataWriter(getTarget(), latch, getDatacontextSource().getTableByQualifiedLabel(table),getFirstDatacontextTarget()));
-		executor.execute(createDataWriter(getTarget(), latch,getDatacontextSource().getTableByQualifiedLabel(table),getSecondDatacontextTarget()));
-		executor.execute(createDataWriter(getTarget(), latch,getDatacontextSource().getTableByQualifiedLabel(table),getThirdDatacontextTarget()));
-
+		for(UpdateableDataContext target : getTargetDataContext()){
+			executor.execute(createDataWriter(getTarget(), latch, getDatacontextSource().getTableByQualifiedLabel(table),target));
+		}
+		
 		latch.await();
 		executor.shutdown();
 

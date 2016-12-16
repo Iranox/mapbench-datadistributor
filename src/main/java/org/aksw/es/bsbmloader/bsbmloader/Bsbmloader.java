@@ -1,6 +1,9 @@
 package org.aksw.es.bsbmloader.bsbmloader;
 
 
+import org.aksw.es.bsbmloader.importer.NoSQLImport;
+import org.aksw.es.bsbmloader.importer.NoSQLMat;
+import org.aksw.es.bsbmloader.importer.NoSQLMatComplex;
 import org.apache.log4j.Logger;
 
 import com.beust.jcommander.JCommander;
@@ -53,6 +56,7 @@ public class Bsbmloader extends MainParams {
 	
 	private void startMatComplex(String type) throws Exception {
 		NoSQLMatComplex nosqlMat = new NoSQLMatComplex();
+		nosqlMat.setThreadsNumber(5);
 		nosqlMat.setDatabaseName(databaseName);
 		nosqlMat.createDataContext(targetUrl, user, password, type);
 		nosqlMat.createDataContextTarget(targetUrl, user, password, type);
@@ -70,6 +74,7 @@ public class Bsbmloader extends MainParams {
 	private void startMat(String type) throws Exception {
 		NoSQLMat nosqlMat = new NoSQLMat();
 		nosqlMat.setDatabaseName(databaseName);
+		nosqlMat.setThreadsNumber(5);
 		nosqlMat.createDataContext(sourceUrl, user, password, type);
 		nosqlMat.createDataContextTarget(targetUrl, user, password, type);
 		nosqlMat.setTargetTable(target);
@@ -81,6 +86,7 @@ public class Bsbmloader extends MainParams {
 	private void startImportHorizontal(String type) throws Exception{
 		NoSQLImport importNosql = new NoSQLImport();
 		importNosql.setDatabaseName(databaseName);
+		importNosql.setThreadsNumber(threads);
 		importNosql.createDataContext(sourceUrl, user, password);
 		importNosql.createDataContextTarget(targetUrl, user, password, type);
 		importNosql.setType(type);
@@ -92,6 +98,7 @@ public class Bsbmloader extends MainParams {
 		NoSQLImport importNosql = new NoSQLImport();
 		importNosql.setType(type);
 		importNosql.setDatabaseName(databaseName);
+		importNosql.setThreadsNumber(threads);
 		importNosql.createDataContext(sourceUrl, user, password);
 		importNosql.createDataContextTarget(targetUrl, user, password, type);
 		if (tables.size() != 0) {

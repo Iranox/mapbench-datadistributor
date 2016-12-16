@@ -2,6 +2,7 @@ package org.aksw.es.bsbmloader.bsbmloader;
 
 import static org.junit.Assert.assertEquals;
 
+import org.aksw.es.bsbmloader.importer.Import;
 import org.junit.Before;
 import org.junit.Test;
 
