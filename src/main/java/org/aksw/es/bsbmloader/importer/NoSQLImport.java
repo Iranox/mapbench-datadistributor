@@ -160,7 +160,7 @@ public class NoSQLImport extends Import {
         ConsoleReporter reporter = ConsoleReporter.forRegistry(metrics)
             .convertRatesTo(TimeUnit.SECONDS)
             .build();
-        reporter.start(1, TimeUnit.MINUTES);
+        reporter.start(2, TimeUnit.SECONDS);
     }
 
 
