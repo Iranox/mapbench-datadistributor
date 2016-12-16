@@ -10,7 +10,7 @@ public class Import {
 	private UpdateableDataContext datacontextSource = null;
 	private UpdateableDataContext firstDatacontextTarget = null;
 	private String targetKey;
-	private final int BORDER = 1000;
+	private final int BORDER = 10000;
 	private String databaseName;
 	private Table target;
 	private String primary;

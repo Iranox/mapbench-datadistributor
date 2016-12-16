@@ -93,6 +93,7 @@ public class DataReader implements Runnable {
 	}
 
 	private Query selectAll() {
+//		System.out.println((dataContext.query().from(table).selectAll().offset(offset).limit(limit).toString()));
 		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).toQuery();
 	}
 
