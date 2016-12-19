@@ -1,5 +1,6 @@
 package org.aksw.es.bsbmloader.writer;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
@@ -19,10 +20,11 @@ import com.codahale.metrics.MetricRegistry;
 public class DataWriter implements Runnable {
 	private BlockingQueue<Row> queue = null;
 	private UpdateableDataContext dataContext;
-	private Row row;
+	private ArrayList<Row> row = new ArrayList<Row>();
 	 private  final MetricRegistry metrics;
 	private Table table;
 	private CountDownLatch latch;
+	private 	Meter requests ;
 	
 	public DataWriter( MetricRegistry metrics ){
 		this.metrics = metrics;
@@ -46,16 +48,29 @@ public class DataWriter implements Runnable {
 	}
 
 	public void insertData() throws Exception {
-		Meter requests = metrics.meter("write threads" );
-		dataContext.refreshSchemas();
+		
+//		dataContext.refreshSchemas();
 
-		row = queue.take();
+		row.add(queue.take());
+		requests = metrics.meter("write threads" );
 
-		while (!row.equals(PosionRow.posionRow)) {
-			dataContext.executeUpdate(insertScript());
-			requests.mark();
-			row = queue.take();
+		while (!row.contains((PosionRow.posionRow))) {
+			
+//			requests.mark();
+			
+			row.add(queue.take());
+			if(row.size() == 250){
+				dataContext.executeUpdate(insertScript());
+				row.clear();
+			
+			}
 		}
+		
+		row.remove(PosionRow.posionRow);
+		if(!row.isEmpty()){
+			dataContext.executeUpdate(insertScript());
+		}
+		
 	}
 
 	private UpdateScript insertScript() {
@@ -64,15 +79,20 @@ public class DataWriter implements Runnable {
 			public void run(UpdateCallback callback) {
 				Object value = null;
 				RowInsertionBuilder insertData = callback.insertInto(table);
-				for (SelectItem column : row.getSelectItems()) {
-					if (!column.getColumn().getType().isTimeBased()) {
-						value = row.getValue(column);
-					} else {
-						value = ElementParser.getDate(row.getValue(column));
+				for(Row rows: row){
+					for (SelectItem column : rows.getSelectItems()) {
+						if (!column.getColumn().getType().isTimeBased()) {
+							value = rows.getValue(column);
+						} else {
+							value = ElementParser.getDate(rows.getValue(column));
+						}
+						insertData.value(column.getColumn(), value);
 					}
-					insertData.value(column.getColumn(), value);
+					requests.mark();
+					insertData.execute();
 				}
-				insertData.execute();
+		
+				
 
 			}
 		};
@@ -83,6 +103,7 @@ public class DataWriter implements Runnable {
 	public void run() {
 		try {
 			insertData();
+			
 			latch.countDown();
 
 		} catch (Exception e) {

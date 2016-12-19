@@ -86,18 +86,19 @@ public class DataReader implements Runnable {
 	}
 
 	private void insertPosion() throws Exception {
-		for(int i = 0; i < threads;i++){
+		for(int i = 0; i < 2*threads;i++){
+			System.out.println("test");
 			queue.put(PosionRow.posionRow);	
 		}
 	
 	}
 
 	private Query selectAll() {
-//		System.out.println((dataContext.query().from(table).selectAll().offset(offset).limit(limit).toString()));
 		return dataContext.query().from(table).selectAll().offset(offset).limit(limit).toQuery();
 	}
 
 	private DataSet createDataSet() {
+		
 		if (numbers == 0 && !isFinish) {
 			DataSet number = dataContext.query().from(table).selectCount().execute();
 			number.next();
@@ -110,6 +111,8 @@ public class DataReader implements Runnable {
 		if (limit == 0 && !isFinish) {
 			return dataContext.query().from(table).selectAll().execute();
 		}
+		
+
 
 		return dataContext.executeQuery(selectAll());
 
@@ -165,6 +168,7 @@ public class DataReader implements Runnable {
 
 			}
 		}
+		
 	}
 
 	private boolean isKey(Row row) {

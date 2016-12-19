@@ -83,6 +83,7 @@ public class NoSQLImport extends Import {
 	}
 
 	public void importToTarget(Table table) throws Exception {
+		queue = new ArrayBlockingQueue<Row>(getBORDER());
 		latch = new CountDownLatch(getThreadsNumber()+1);
 		executor = Executors.newFixedThreadPool(getThreadsNumber()+1);
 		startReport();
@@ -91,7 +92,6 @@ public class NoSQLImport extends Import {
 		for(UpdateableDataContext target : getTargetDataContext()){
 			executor.execute(createDataWriter(table, latch,target)); 
 		}
-		
 		latch.await();
 		executor.shutdown();
 
@@ -160,7 +160,7 @@ public class NoSQLImport extends Import {
         ConsoleReporter reporter = ConsoleReporter.forRegistry(metrics)
             .convertRatesTo(TimeUnit.SECONDS)
             .build();
-        reporter.start(2, TimeUnit.SECONDS);
+        reporter.start(6, TimeUnit.SECONDS);
     }
 
 
