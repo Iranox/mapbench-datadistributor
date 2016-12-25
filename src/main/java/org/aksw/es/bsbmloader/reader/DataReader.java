@@ -87,7 +87,6 @@ public class DataReader implements Runnable {
 
 	private void insertPosion() throws Exception {
 		for(int i = 0; i < 2*threads;i++){
-			System.out.println("test");
 			queue.put(PosionRow.posionRow);	
 		}
 	
