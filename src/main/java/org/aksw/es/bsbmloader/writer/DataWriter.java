@@ -24,7 +24,8 @@ public class DataWriter implements Runnable {
 	 private  final MetricRegistry metrics;
 	private Table table;
 	private CountDownLatch latch;
-	private 	Meter requests ;
+	private Meter requests;
+	private final int BORDER = 250;
 	
 	public DataWriter( MetricRegistry metrics ){
 		this.metrics = metrics;
@@ -49,21 +50,20 @@ public class DataWriter implements Runnable {
 
 	public void insertData() throws Exception {
 		
-//		dataContext.refreshSchemas();
 
 		row.add(queue.take());
 		requests = metrics.meter("write threads" );
 
 		while (!row.contains((PosionRow.posionRow))) {
 			
-//			requests.mark();
 			
-			row.add(queue.take());
-			if(row.size() == 250){
+			
+			if(row.size() == BORDER){
 				dataContext.executeUpdate(insertScript());
 				row.clear();
 			
 			}
+			row.add(queue.take());
 		}
 		
 		row.remove(PosionRow.posionRow);

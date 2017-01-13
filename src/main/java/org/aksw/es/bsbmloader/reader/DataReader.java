@@ -2,7 +2,6 @@ package org.aksw.es.bsbmloader.reader;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
@@ -12,7 +11,7 @@ import org.apache.metamodel.query.Query;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
-import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 
@@ -24,7 +23,7 @@ public class DataReader implements Runnable {
 	private int limit = 0;
 	private static org.apache.log4j.Logger log = Logger.getLogger(DataReader.class);
 	private CountDownLatch latch;
-	private final static int BORDER = 300;
+	private final static int BORDER = 1000;
 	private int numbers = 0;
 	private boolean isFinish = false;
 	private int key = 0;
@@ -155,6 +154,7 @@ public class DataReader implements Runnable {
 				row.getSelectItems();
 				queue.put(row);
 				requests.mark();
+				size();
 			}
 		} else {
 			while (dataset.next()) {
@@ -163,11 +163,20 @@ public class DataReader implements Runnable {
 				if (isKey(row)) {
 					queue.put(row);
 					requests.mark();
+					size();
 				}
 
 			}
 		}
 		
+	}
+	
+	public void size(){
+		metrics.register(MetricRegistry.name(DataReader.class, "QueueThread"), new Gauge<Integer>() {
+			public Integer getValue(){
+				return queue.size();
+			}
+		});
 	}
 
 	private boolean isKey(Row row) {
