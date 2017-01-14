@@ -2,7 +2,6 @@ package org.aksw.es.bsbmloader.reader;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.metamodel.DataContext;
@@ -12,7 +11,7 @@ import org.apache.metamodel.query.Query;
 import org.apache.metamodel.schema.Column;
 import org.apache.metamodel.schema.Table;
 
-import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 
@@ -24,7 +23,7 @@ public class DataReader implements Runnable {
 	private int limit = 0;
 	private static org.apache.log4j.Logger log = Logger.getLogger(DataReader.class);
 	private CountDownLatch latch;
-	private final static int BORDER = 300;
+	private final static int BORDER = 3000;
 	private int numbers = 0;
 	private boolean isFinish = false;
 	private int key = 0;
@@ -32,17 +31,17 @@ public class DataReader implements Runnable {
 	private boolean horizontal = false;
 	private String columnName;
 	private Column hashedColumn;
-	private  final MetricRegistry metrics;
+	private final MetricRegistry metrics;
 	private Meter requests;
 	private int threads;
-	
-	public void setThreads(int threads){
+
+	public void setThreads(int threads) {
 		this.threads = threads;
 	}
-	
-	public DataReader(MetricRegistry metrics){
+
+	public DataReader(MetricRegistry metrics) {
 		this.metrics = metrics;
-		
+
 	}
 
 	public void setKey(int key) {
@@ -86,10 +85,10 @@ public class DataReader implements Runnable {
 	}
 
 	private void insertPosion() throws Exception {
-		for(int i = 0; i < 2*threads;i++){
-			queue.put(PosionRow.posionRow);	
+		for (int i = 0; i < 2 * threads; i++) {
+			queue.put(PosionRow.posionRow);
 		}
-	
+
 	}
 
 	private Query selectAll() {
@@ -97,7 +96,7 @@ public class DataReader implements Runnable {
 	}
 
 	private DataSet createDataSet() {
-		
+
 		if (numbers == 0 && !isFinish) {
 			DataSet number = dataContext.query().from(table).selectCount().execute();
 			number.next();
@@ -106,12 +105,6 @@ public class DataReader implements Runnable {
 			limit = BORDER;
 			number.close();
 		}
-
-		if (limit == 0 && !isFinish) {
-			return dataContext.query().from(table).selectAll().execute();
-		}
-		
-
 
 		return dataContext.executeQuery(selectAll());
 
@@ -142,38 +135,27 @@ public class DataReader implements Runnable {
 	}
 
 	private void insertRowIntoBlockingQueue(DataSet dataset) throws InterruptedException {
-		
-		 hashedColumn = table.getColumnByName(columnName);
-		 requests = metrics.meter("read thread");
-		 
 
-		if (!horizontal) {
-			
+		hashedColumn = table.getColumnByName(columnName);
+		requests = metrics.meter("read thread");
+
 		while (dataset.next()) {
-			
-				Row row = dataset.getRow();
-				row.getSelectItems();
+			Row row = dataset.getRow();
+			if (horizontal && isKey(row)) {
+				queue.put(row);
+				requests.mark();
+			} else {
 				queue.put(row);
 				requests.mark();
 			}
-		} else {
-			while (dataset.next()) {
-				Row row = dataset.getRow();
-				row.getSelectItems();
-				if (isKey(row)) {
-					queue.put(row);
-					requests.mark();
-				}
 
-			}
 		}
-		
+
 	}
 
 	private boolean isKey(Row row) {
-		return ( (Integer) row.getValue(hashedColumn) % key ) == result;
+		return ((Integer) row.getValue(hashedColumn) % key) == result;
 	}
-	
 
 	public void run() {
 		try {

@@ -22,7 +22,7 @@ public class MongoConnectionProperties extends ConnectionProperties implements C
 	public UpdateableDataContext getDB() throws Exception {
 		MongoClient mongoClient = new MongoClient(hostname, port);
 		DB databaseMongo = new DB(mongoClient, name);
-		mongoClient.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
+		databaseMongo.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
 		UpdateableDataContext dataContext = new MongoDbDataContext(databaseMongo);
 		return dataContext;
 	}

@@ -61,7 +61,7 @@ public class DataWriter implements Runnable {
 			row.add(queue.take());
 			if(row.size() == 250){
 				dataContext.executeUpdate(insertScript());
-				row.clear();
+				row = new ArrayList<Row>();
 			
 			}
 		}
