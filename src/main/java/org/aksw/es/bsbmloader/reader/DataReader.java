@@ -145,8 +145,10 @@ public class DataReader implements Runnable {
 				queue.put(row);
 				requests.mark();
 			} else {
+			    if(!horizontal){
 				queue.put(row);
 				requests.mark();
+			    }
 			}
 
 		}
